@@ -62,19 +62,15 @@
       display:grid; gap:16px; align-items:start;
       grid-template-columns: 340px minmax(0, 1fr);
     }
-    .layout > *{ min-width:0; } /* super wichtig */
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr; }
-    }
-    @media (min-width: 1200px){
-      .layout{ grid-template-columns: 380px minmax(0, 1fr); }
-    }
+    .layout > *{ min-width:0; }
+    @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+    @media (min-width: 1200px){ .layout{ grid-template-columns: 380px minmax(0, 1fr); } }
 
     .card{
       position: relative;
       z-index: 1;
       border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
-      overflow:hidden; /* verhindert, dass FullCalendar "rausmalt" */
+      overflow:hidden;
     }
 
     form{ display:grid; gap:10px; }
@@ -112,7 +108,13 @@
     }
     .fc{ max-width:100%; }
 
-    /* Toolbar: Titel auf Handy klein + nicht umbrechen */
+    /* WICHTIG: Touch im Kalender erlauben */
+    #calendarWrap, #calendar, .fc { pointer-events: auto; }
+    .fc .fc-scroller {
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    /* Titel kompakt (Handy) */
     .fc .fc-toolbar-title{
       white-space:nowrap;
       overflow:hidden;
@@ -120,16 +122,9 @@
       max-width: 100%;
     }
     @media (max-width: 600px){
-      .fc .fc-toolbar{
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-      .fc .fc-toolbar-title{
-        font-size: 1em; /* kleiner */
-      }
-      .fc .fc-button{
-        padding: .35em .55em;
-      }
+      .fc .fc-toolbar{ flex-wrap:wrap; gap:6px; }
+      .fc .fc-toolbar-title{ font-size:1em; }
+      .fc .fc-button{ padding:.35em .55em; }
     }
 
     /* Modal */
@@ -137,6 +132,7 @@
       position:fixed; inset:0; background:rgba(0,0,0,.45);
       display:none; align-items:center; justify-content:center; padding:16px;
       z-index:9999;
+      pointer-events: auto;
     }
     .modal{
       width:min(560px, 100%); background:#fff; border-radius:12px;
@@ -222,13 +218,12 @@
 
         <hr class="hr" />
         <div class="small">
-          Handy: im Wochen-/Tagkalender <b>lange drücken + ziehen</b> zum Markieren.
-          Im Monatskalender: <b>Tag antippen</b> setzt 08:00–09:00.
+          Handy: Tippe im Kalender irgendwo hin → Start/Ende werden gesetzt. (Im Monat setzt ein Tap 08:00–09:00.)
           <br/>Termine antippen → Details (Privat: bearbeiten/löschen).
         </div>
       </div>
 
-      <!-- Right: List + Calendar (als Card, damit nichts "überlappt") -->
+      <!-- Right: List + Calendar in a card -->
       <div class="card">
         <div id="listWrap">
           <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
@@ -272,7 +267,6 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
       authDomain: "autoplan-6b642.firebaseapp.com",
@@ -285,7 +279,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // State
     let activeCarFilter = "ALL";
     let allBookings = [];
     let calendar = null;
@@ -295,7 +288,6 @@
     const COLOR_DOMIZIL = "#2563eb";
     const COLOR_PRIVAT  = "#16a34a";
 
-    // Helpers
     function setMsg(text, kind) {
       const el = document.getElementById("msg");
       el.textContent = text || "";
@@ -346,7 +338,6 @@
       document.getElementById("editHint").style.display = "none";
     }
 
-    // Render: List
     function renderList() {
       const wrap = document.getElementById("bookings");
       const docs = sortBookings(filteredBookings());
@@ -379,7 +370,6 @@
       });
     }
 
-    // Calendar
     function bookingsToEvents(bookings) {
       const docs = sortBookings(bookings);
       return docs.map(b => {
@@ -407,6 +397,21 @@
       );
     }
 
+    function openModalForBooking(b) {
+      modalBookingId = b.id;
+
+      document.getElementById("mCar").textContent = b.car || "";
+      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
+      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
+      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
+
+      const isPrivat = b.type === "privat";
+      modalEdit.style.display = isPrivat ? "inline-block" : "none";
+      modalDelete.style.display = isPrivat ? "inline-block" : "none";
+
+      modalOverlay.style.display = "flex";
+    }
+
     function ensureCalendar() {
       if (calendar) return;
 
@@ -420,50 +425,51 @@
         slotMaxTime: "21:00:00",
         allDaySlot: false,
         expandRows: true,
+
         locale: "de",
         buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
 
-        // Titel kompakter (verhindert “5 Zeilen”)
+        // kompakter Titel (verhindert 5 Zeilen)
         titleFormat: { year: "numeric", month: "short", day: "numeric" },
 
-        // Mobile selection: lange drücken + ziehen
+        // Mobile: long-press selection (falls du ziehen willst)
         selectable: true,
-        longPressDelay: 400,
-        selectLongPressDelay: 400,
-        eventLongPressDelay: 400,
+        longPressDelay: 200,
+        selectLongPressDelay: 200,
+        eventLongPressDelay: 200,
+        selectMirror: true,
 
-        // In Woche/Tag: Slot ziehen/markieren -> Form füllen
+        // WICHTIG: Tap auf Handy soll IMMER etwas tun
+        dateClick: (info) => {
+          const carSel = document.getElementById("car");
+          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
+
+          const start = new Date(info.date);
+          const end   = new Date(info.date);
+
+          if (calendar.view.type === "dayGridMonth") {
+            start.setHours(8,0,0,0);
+            end.setHours(9,0,0,0);
+          } else {
+            // Woche/Tag: 30 min ab getippter Zeit
+            end.setMinutes(end.getMinutes() + 30);
+          }
+
+          document.getElementById("start").value = toDatetimeLocal(start);
+          document.getElementById("end").value   = toDatetimeLocal(end);
+
+          setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
+        },
+
+        // Drag-Selection (Laptop/optional Mobile)
         select: (info) => {
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
+          setMsg("✅ Zeitraum übernommen – du kannst ihn unten anpassen.", "ok");
         },
-
-        // Im Monatskalender: Tag antippen -> Standardzeit setzen (08:00–09:00)
-       dateClick: (info) => {
-  const carSel = document.getElementById("car");
-  if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
-
-  const start = new Date(info.date);
-  const end   = new Date(info.date);
-
-  // sinnvoller Default je nach View
-  if (calendar.view.type === "dayGridMonth") {
-    start.setHours(8,0,0,0);
-    end.setHours(9,0,0,0);
-  } else {
-    // Woche / Tag: kleine Buchung
-    end.setMinutes(end.getMinutes() + 30);
-  }
-
-  document.getElementById("start").value = toDatetimeLocal(start);
-  document.getElementById("end").value   = toDatetimeLocal(end);
-
-  setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
-},
-
 
         eventClick: (info) => {
           const b = bookingById(info.event.id);
@@ -485,10 +491,8 @@
       calendar.addEventSource(events);
     }
 
-    // Filter
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
-
       document.querySelectorAll("button.car").forEach(b => {
         b.classList.toggle("active", b.dataset.car === newFilter);
       });
@@ -497,16 +501,13 @@
       pill.textContent = (newFilter === "ALL") ? "Filter: Alle Autos" : `Filter: ${newFilter}`;
 
       renderList();
-      if (document.getElementById("calendarWrap").style.display !== "none") {
-        renderCalendar();
-      }
+      if (document.getElementById("calendarWrap").style.display !== "none") renderCalendar();
     }
 
     document.querySelectorAll("button.car").forEach(btn => {
       btn.addEventListener("click", () => setFilter(btn.dataset.car));
     });
 
-    // View toggle
     function showListView() {
       document.getElementById("listWrap").style.display = "block";
       document.getElementById("calendarWrap").style.display = "none";
@@ -534,37 +535,19 @@
     document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
-    // Modal (Details + Privat: edit/delete)
+    // Modal wiring
     const modalOverlay = document.getElementById("modalOverlay");
     const modalClose = document.getElementById("modalClose");
     const modalEdit = document.getElementById("modalEdit");
     const modalDelete = document.getElementById("modalDelete");
     let modalBookingId = null;
 
-    function openModalForBooking(b) {
-      modalBookingId = b.id;
-
-      document.getElementById("mCar").textContent = b.car || "";
-      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
-      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
-      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
-
-      const isPrivat = b.type === "privat";
-      modalEdit.style.display = isPrivat ? "inline-block" : "none";
-      modalDelete.style.display = isPrivat ? "inline-block" : "none";
-
-      modalOverlay.style.display = "flex";
-    }
-
     function closeModal() {
       modalOverlay.style.display = "none";
       modalBookingId = null;
     }
-
     modalClose.addEventListener("click", closeModal);
-    modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) closeModal();
-    });
+    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
 
     modalEdit.addEventListener("click", () => {
       const b = bookingById(modalBookingId);
@@ -584,8 +567,7 @@
       const b = bookingById(modalBookingId);
       if (!b || b.type !== "privat") return;
 
-      const ok = confirm("Privatbuchung wirklich löschen?");
-      if (!ok) return;
+      if (!confirm("Privatbuchung wirklich löschen?")) return;
 
       try {
         await db.collection("bookings").doc(b.id).delete();
@@ -626,9 +608,7 @@
         .filter(b => b.car === car && b.id !== editingId)
         .some(b => overlaps(start, end, b.start, b.end));
 
-      if (conflicts) {
-        return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits belegt (Domizil oder Privat).", "err");
-      }
+      if (conflicts) return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits belegt (Domizil oder Privat).", "err");
 
       try {
         if (editingId) {
@@ -663,9 +643,7 @@
       db.collection("bookings").onSnapshot((snap) => {
         allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         renderList();
-        if (document.getElementById("calendarWrap").style.display !== "none") {
-          renderCalendar();
-        }
+        if (document.getElementById("calendarWrap").style.display !== "none") renderCalendar();
       }, (err) => {
         console.error(err);
         document.getElementById("bookings").innerHTML =
@@ -679,13 +657,3 @@
   </script>
 </body>
 </html>
-
-/* Mobile: Touch/Click im Kalender erlauben */
-#calendarWrap, #calendar, .fc {
-  pointer-events: auto;
-}
-
-.fc .fc-scroller {
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-}
