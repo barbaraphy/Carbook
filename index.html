@@ -381,7 +381,7 @@
         headerToolbar: {
           left: "prev,next today",
           center: "title",
-          right: "timeGridWeek,timeGridDay"
+          right: "timeGridMonat,timeGridWoche,timeGridTag"
         },
         selectable: true,
         select: (info) => {
@@ -458,7 +458,7 @@
     }
 
     document.getElementById("showList").addEventListener("click", showListView);
-    document.getElementById("showCalendar").addEventListener("click", showCalendarView);
+    function showListView() {   document.getElementById("listWrap").style.display = "block";   document.getElementById("calendarWrap").style.display = "none";   document.getElementById("showList").classList.add("active");   document.getElementById("showWeek").classList.remove("active");   document.getElementById("showMonth").classList.remove("active"); }  function showCalendarView(viewName) {   document.getElementById("listWrap").style.display = "none";   document.getElementById("calendarWrap").style.display = "block";   document.getElementById("showList").classList.remove("active");   document.getElementById("showWeek").classList.toggle("active", viewName === "timeGridWeek");   document.getElementById("showMonth").classList.toggle("active", viewName === "dayGridMonth");    ensureCalendar();   calendar.changeView(viewName);   renderCalendar(); }  document.getElementById("showList").addEventListener("click", showListView); document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek")); document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
     // =========================
     // Form: Reset + Submit (Privat only)
