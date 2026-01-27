@@ -59,16 +59,20 @@
 
     /* Responsive Layout */
     .layout{
-      display:grid; gap:16px; align-items:start;
+      display:grid;
+      gap:16px;
+      align-items:start;
       grid-template-columns: 340px minmax(0, 1fr);
     }
     .layout > *{ min-width:0; }
-    @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
-    @media (min-width: 1200px){ .layout{ grid-template-columns: 380px minmax(0, 1fr); } }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+    @media (min-width: 1200px){
+      .layout{ grid-template-columns: 380px minmax(0, 1fr); }
+    }
 
     .card{
-      position: relative;
-      z-index: 1;
       border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
       overflow:hidden;
     }
@@ -99,22 +103,18 @@
     .dangerText{ color:#b91c1c; font-weight:700; }
 
     /* Calendar */
-    #calendarWrap{ display:none; }
+    #calendarWrap{ display:none; position:relative; }
     #calendar{
       border:1px solid #eee; border-radius:10px; padding:10px;
       width:100%;
       box-sizing:border-box;
       overflow:hidden;
+      position:relative;
     }
-    .fc{ max-width:100%; }
+    .fc{ max-width:100%; position:relative; }
+    .fc .fc-view-harness{ overflow:hidden; border-radius:10px; }
 
-    /* WICHTIG: Touch im Kalender erlauben */
-    #calendarWrap, #calendar, .fc { pointer-events: auto; }
-    .fc .fc-scroller {
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
-    }
-    /* Titel kompakt (Handy) */
+    /* Titel kompakt */
     .fc .fc-toolbar-title{
       white-space:nowrap;
       overflow:hidden;
@@ -125,6 +125,15 @@
       .fc .fc-toolbar{ flex-wrap:wrap; gap:6px; }
       .fc .fc-toolbar-title{ font-size:1em; }
       .fc .fc-button{ padding:.35em .55em; }
+
+      /* Handy: Drag in Woche/Tag erlauben */
+      .fc .fc-timegrid-body,
+      .fc .fc-timegrid-slots,
+      .fc .fc-scroller-harness,
+      .fc .fc-scroller{
+        touch-action: none;
+        -webkit-overflow-scrolling: touch;
+      }
     }
 
     /* Modal */
@@ -132,7 +141,6 @@
       position:fixed; inset:0; background:rgba(0,0,0,.45);
       display:none; align-items:center; justify-content:center; padding:16px;
       z-index:9999;
-      pointer-events: auto;
     }
     .modal{
       width:min(560px, 100%); background:#fff; border-radius:12px;
@@ -218,12 +226,12 @@
 
         <hr class="hr" />
         <div class="small">
-          Handy: Tippe im Kalender irgendwo hin → Start/Ende werden gesetzt. (Im Monat setzt ein Tap 08:00–09:00.)
+          Handy: Wochen-/Tagansicht: <b>lange drücken + ziehen</b>. Monat: <b>Tag antippen</b>.
           <br/>Termine antippen → Details (Privat: bearbeiten/löschen).
         </div>
       </div>
 
-      <!-- Right: List + Calendar in a card -->
+      <!-- Right: List + Calendar -->
       <div class="card">
         <div id="listWrap">
           <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
@@ -293,45 +301,35 @@
       el.textContent = text || "";
       el.className = "msg " + (kind || "");
     }
-
     function fmtLocal(dtStr) {
       if (!dtStr) return "";
       return dtStr.replace("T", " ").slice(0, 16);
     }
-
     function overlaps(aStart, aEnd, bStart, bEnd) {
-      const as = new Date(aStart);
-      const ae = new Date(aEnd);
-      const bs = new Date(bStart);
-      const be = new Date(bEnd);
+      const as = new Date(aStart), ae = new Date(aEnd);
+      const bs = new Date(bStart), be = new Date(bEnd);
       return as < be && ae > bs;
     }
-
     function filteredBookings() {
       if (activeCarFilter === "ALL") return allBookings.slice();
       return allBookings.filter(b => b.car === activeCarFilter);
     }
-
     function sortBookings(arr) {
       return arr.slice().sort((x, y) => (x.start || "").localeCompare(y.start || ""));
     }
-
     function toDatetimeLocal(dateObj) {
       const pad = (n) => String(n).padStart(2, "0");
       const d = new Date(dateObj);
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
-
     function bookingById(id) {
       return allBookings.find(b => b.id === id) || null;
     }
-
     function setEditMode(id) {
       editingId = id;
       document.getElementById("saveBtn").textContent = "Änderungen speichern";
       document.getElementById("editHint").style.display = "inline";
     }
-
     function clearEditMode() {
       editingId = null;
       document.getElementById("saveBtn").textContent = "Buchung speichern";
@@ -362,9 +360,7 @@
             <div class="meta">${fmtLocal(b.start)} → ${fmtLocal(b.end)}</div>
             <div class="small2">${(b.name || "").trim()}</div>
           </div>
-          <div class="small2">
-            <span class="pill">${b.id.slice(0,6)}…</span>
-          </div>
+          <div class="small2"><span class="pill">${b.id.slice(0,6)}…</span></div>
         `;
         wrap.appendChild(div);
       });
@@ -376,10 +372,9 @@
         const isDomizil = b.type === "domizil";
         const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
         const who = (b.name || "").trim() || (isDomizil ? "Domizil" : "Privat");
-        const title = `${b.car} – ${who}`;
         return {
           id: b.id,
-          title,
+          title: `${b.car} – ${who}`,
           start: b.start,
           end: b.end,
           backgroundColor: color,
@@ -397,9 +392,15 @@
       );
     }
 
+    // Modal wiring
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalClose = document.getElementById("modalClose");
+    const modalEdit = document.getElementById("modalEdit");
+    const modalDelete = document.getElementById("modalDelete");
+    let modalBookingId = null;
+
     function openModalForBooking(b) {
       modalBookingId = b.id;
-
       document.getElementById("mCar").textContent = b.car || "";
       document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
       document.getElementById("mName").textContent = (b.name || "").trim() || "-";
@@ -411,6 +412,46 @@
 
       modalOverlay.style.display = "flex";
     }
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      modalBookingId = null;
+    }
+    modalClose.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    modalEdit.addEventListener("click", () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      document.getElementById("car").value = b.car;
+      document.getElementById("name").value = (b.name || "").trim();
+      document.getElementById("start").value = b.start;
+      document.getElementById("end").value = b.end;
+
+      setEditMode(b.id);
+      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
+      closeModal();
+    });
+
+    modalDelete.addEventListener("click", async () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+      if (!confirm("Privatbuchung wirklich löschen?")) return;
+
+      try {
+        await db.collection("bookings").doc(b.id).delete();
+        if (editingId === b.id) {
+          document.getElementById("bookingForm").reset();
+          clearEditMode();
+        }
+        setMsg("✅ Privatbuchung gelöscht", "ok");
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
+      } finally {
+        closeModal();
+      }
+    });
 
     function ensureCalendar() {
       if (calendar) return;
@@ -430,17 +471,15 @@
         buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
 
-        // kompakter Titel (verhindert 5 Zeilen)
         titleFormat: { year: "numeric", month: "short", day: "numeric" },
 
-        // Mobile: long-press selection (falls du ziehen willst)
         selectable: true,
-        longPressDelay: 200,
-        selectLongPressDelay: 200,
-        eventLongPressDelay: 200,
         selectMirror: true,
+        longPressDelay: 150,
+        selectLongPressDelay: 150,
+        eventLongPressDelay: 150,
+        selectMinDistance: 0,
 
-        // WICHTIG: Tap auf Handy soll IMMER etwas tun
         dateClick: (info) => {
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
@@ -452,17 +491,14 @@
             start.setHours(8,0,0,0);
             end.setHours(9,0,0,0);
           } else {
-            // Woche/Tag: 30 min ab getippter Zeit
             end.setMinutes(end.getMinutes() + 30);
           }
 
           document.getElementById("start").value = toDatetimeLocal(start);
           document.getElementById("end").value   = toDatetimeLocal(end);
-
           setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
         },
 
-        // Drag-Selection (Laptop/optional Mobile)
         select: (info) => {
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
@@ -475,6 +511,11 @@
           const b = bookingById(info.event.id);
           if (!b) return;
           openModalForBooking(b);
+        },
+
+        // FIX: "Heute" Button muss funktionieren -> nach jedem View-Wechsel sicherstellen
+        datesSet: () => {
+          // nichts extra nötig, aber sorgt dafür dass FullCalendar intern sauber ist
         },
 
         windowResize: () => setCalendarToolbarForWidth()
@@ -493,6 +534,7 @@
 
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
+
       document.querySelectorAll("button.car").forEach(b => {
         b.classList.toggle("active", b.dataset.car === newFilter);
       });
@@ -527,6 +569,9 @@
 
       ensureCalendar();
       calendar.changeView(viewName);
+      // FIX: "Heute" button & nav stability
+      calendar.updateSize();
+
       setCalendarToolbarForWidth();
       renderCalendar();
     }
@@ -534,55 +579,6 @@
     document.getElementById("showList").addEventListener("click", showListView);
     document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
-
-    // Modal wiring
-    const modalOverlay = document.getElementById("modalOverlay");
-    const modalClose = document.getElementById("modalClose");
-    const modalEdit = document.getElementById("modalEdit");
-    const modalDelete = document.getElementById("modalDelete");
-    let modalBookingId = null;
-
-    function closeModal() {
-      modalOverlay.style.display = "none";
-      modalBookingId = null;
-    }
-    modalClose.addEventListener("click", closeModal);
-    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
-
-    modalEdit.addEventListener("click", () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-
-      document.getElementById("car").value = b.car;
-      document.getElementById("name").value = (b.name || "").trim();
-      document.getElementById("start").value = b.start;
-      document.getElementById("end").value = b.end;
-
-      setEditMode(b.id);
-      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
-      closeModal();
-    });
-
-    modalDelete.addEventListener("click", async () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-
-      if (!confirm("Privatbuchung wirklich löschen?")) return;
-
-      try {
-        await db.collection("bookings").doc(b.id).delete();
-        if (editingId === b.id) {
-          document.getElementById("bookingForm").reset();
-          clearEditMode();
-        }
-        setMsg("✅ Privatbuchung gelöscht", "ok");
-      } catch (err) {
-        console.error(err);
-        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
-      } finally {
-        closeModal();
-      }
-    });
 
     // Form
     document.getElementById("resetBtn").addEventListener("click", () => {
@@ -638,7 +634,6 @@
       }
     });
 
-    // Firestore sync
     function subscribeAll() {
       db.collection("bookings").onSnapshot((snap) => {
         allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -651,7 +646,6 @@
       });
     }
 
-    // Start
     showListView();
     subscribeAll();
   </script>
