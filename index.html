@@ -57,12 +57,12 @@
     .btn.danger:hover{ background:#b91c1c; }
     .btn.active{ outline:3px solid rgba(17,24,39,.15); }
 
-    /* Responsive Layout: breit nebeneinander, bei weniger Platz untereinander */
+    /* Responsive Layout */
     .layout{
       display:grid; gap:16px; align-items:start;
       grid-template-columns: 340px minmax(0, 1fr);
     }
-    .layout > *{ min-width:0; } /* verhindert Überlappung */
+    .layout > *{ min-width:0; } /* super wichtig */
     @media (max-width: 980px){
       .layout{ grid-template-columns: 1fr; }
     }
@@ -71,8 +71,12 @@
     }
 
     .card{
+      position: relative;
+      z-index: 1;
       border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
+      overflow:hidden; /* verhindert, dass FullCalendar "rausmalt" */
     }
+
     form{ display:grid; gap:10px; }
     label{ display:block; font-size:14px; color:#333; }
     input,select{
@@ -102,7 +106,30 @@
     #calendarWrap{ display:none; }
     #calendar{
       border:1px solid #eee; border-radius:10px; padding:10px;
+      width:100%;
+      box-sizing:border-box;
       overflow:hidden;
+    }
+    .fc{ max-width:100%; }
+
+    /* Toolbar: Titel auf Handy klein + nicht umbrechen */
+    .fc .fc-toolbar-title{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+    @media (max-width: 600px){
+      .fc .fc-toolbar{
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .fc .fc-toolbar-title{
+        font-size: 1em; /* kleiner */
+      }
+      .fc .fc-button{
+        padding: .35em .55em;
+      }
     }
 
     /* Modal */
@@ -195,13 +222,14 @@
 
         <hr class="hr" />
         <div class="small">
-          Tipp: Im Kalender kannst du ein Zeitfenster markieren – Start/Ende werden dann vorgefüllt.
-          <br/>Termine anklicken → Details (Privat: bearbeiten/löschen).
+          Handy: im Wochen-/Tagkalender <b>lange drücken + ziehen</b> zum Markieren.
+          Im Monatskalender: <b>Tag antippen</b> setzt 08:00–09:00.
+          <br/>Termine antippen → Details (Privat: bearbeiten/löschen).
         </div>
       </div>
 
-      <!-- Right: List + Calendar -->
-      <div>
+      <!-- Right: List + Calendar (als Card, damit nichts "überlappt") -->
+      <div class="card">
         <div id="listWrap">
           <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
           <div id="bookings" class="list"><em class="small2">Lade Buchungen …</em></div>
@@ -211,7 +239,7 @@
           <h2 style="margin:0 0 10px 0;">Kalenderansicht</h2>
           <div id="calendar"></div>
           <div class="small" style="margin-top:10px;">
-            Hinweis: Auf den Termin ermöglicht das Bearbeiten und Löschen.
+            Hinweis: Tippe auf einen Termin für Details. Nur <b>Privat</b> ist bearbeitbar/löschbar.
           </div>
         </div>
       </div>
@@ -244,9 +272,7 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
   <script>
-    // =========================
     // Firebase config
-    // =========================
     const firebaseConfig = {
       apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
       authDomain: "autoplan-6b642.firebaseapp.com",
@@ -259,21 +285,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // =========================
     // State
-    // =========================
     let activeCarFilter = "ALL";
-    let allBookings = []; // {id, ...data}
+    let allBookings = [];
     let calendar = null;
+    let editingId = null;
+    let currentCalendarView = "timeGridWeek";
 
-    let editingId = null; // doc id for edit mode (privat only)
+    const COLOR_DOMIZIL = "#2563eb";
+    const COLOR_PRIVAT  = "#16a34a";
 
-    const COLOR_DOMIZIL = "#2563eb"; // blau
-    const COLOR_PRIVAT  = "#16a34a"; // grün
-
-    // =========================
     // Helpers
-    // =========================
     function setMsg(text, kind) {
       const el = document.getElementById("msg");
       el.textContent = text || "";
@@ -324,9 +346,7 @@
       document.getElementById("editHint").style.display = "none";
     }
 
-    // =========================
     // Render: List
-    // =========================
     function renderList() {
       const wrap = document.getElementById("bookings");
       const docs = sortBookings(filteredBookings());
@@ -359,9 +379,7 @@
       });
     }
 
-    // =========================
     // Calendar
-    // =========================
     function bookingsToEvents(bookings) {
       const docs = sortBookings(bookings);
       return docs.map(b => {
@@ -369,7 +387,6 @@
         const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
         const who = (b.name || "").trim() || (isDomizil ? "Domizil" : "Privat");
         const title = `${b.car} – ${who}`;
-
         return {
           id: b.id,
           title,
@@ -395,7 +412,7 @@
 
       const calEl = document.getElementById("calendar");
       calendar = new FullCalendar.Calendar(calEl, {
-        initialView: "timeGridWeek",
+        initialView: currentCalendarView,
         height: "auto",
         nowIndicator: true,
         firstDay: 1,
@@ -406,13 +423,39 @@
         locale: "de",
         buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
-        selectable: true,
 
+        // Titel kompakter (verhindert “5 Zeilen”)
+        titleFormat: { year: "numeric", month: "short", day: "numeric" },
+
+        // Mobile selection: lange drücken + ziehen
+        selectable: true,
+        longPressDelay: 400,
+        selectLongPressDelay: 400,
+        eventLongPressDelay: 400,
+
+        // In Woche/Tag: Slot ziehen/markieren -> Form füllen
         select: (info) => {
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
+        },
+
+        // Im Monatskalender: Tag antippen -> Standardzeit setzen (08:00–09:00)
+        dateClick: (info) => {
+          if (calendar.view.type !== "dayGridMonth") return;
+
+          const carSel = document.getElementById("car");
+          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
+
+          const start = new Date(info.date);
+          start.setHours(8,0,0,0);
+          const end = new Date(info.date);
+          end.setHours(9,0,0,0);
+
+          document.getElementById("start").value = toDatetimeLocal(start);
+          document.getElementById("end").value = toDatetimeLocal(end);
+          setMsg("Tipp: Zeiten wurden auf 08:00–09:00 gesetzt (anpassen möglich).", "ok");
         },
 
         eventClick: (info) => {
@@ -435,9 +478,7 @@
       calendar.addEventSource(events);
     }
 
-    // =========================
     // Filter
-    // =========================
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
 
@@ -458,9 +499,7 @@
       btn.addEventListener("click", () => setFilter(btn.dataset.car));
     });
 
-    // =========================
-    // View toggle (Liste / Woche / Monat)
-    // =========================
+    // View toggle
     function showListView() {
       document.getElementById("listWrap").style.display = "block";
       document.getElementById("calendarWrap").style.display = "none";
@@ -470,6 +509,8 @@
     }
 
     function showCalendarView(viewName) {
+      currentCalendarView = viewName;
+
       document.getElementById("listWrap").style.display = "none";
       document.getElementById("calendarWrap").style.display = "block";
       document.getElementById("showList").classList.remove("active");
@@ -486,14 +527,11 @@
     document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
-    // =========================
     // Modal (Details + Privat: edit/delete)
-    // =========================
     const modalOverlay = document.getElementById("modalOverlay");
     const modalClose = document.getElementById("modalClose");
     const modalEdit = document.getElementById("modalEdit");
     const modalDelete = document.getElementById("modalDelete");
-
     let modalBookingId = null;
 
     function openModalForBooking(b) {
@@ -525,7 +563,6 @@
       const b = bookingById(modalBookingId);
       if (!b || b.type !== "privat") return;
 
-      // Prefill form
       document.getElementById("car").value = b.car;
       document.getElementById("name").value = (b.name || "").trim();
       document.getElementById("start").value = b.start;
@@ -533,7 +570,6 @@
 
       setEditMode(b.id);
       setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
-
       closeModal();
     });
 
@@ -559,9 +595,7 @@
       }
     });
 
-    // =========================
-    // Form: Reset + Submit (Privat only)
-    // =========================
+    // Form
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("bookingForm").reset();
       clearEditMode();
@@ -581,8 +615,6 @@
       if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
       if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
 
-      // Konfliktprüfung gegen alles (inkl. Domizil) für dieses Auto
-      // Beim Bearbeiten: eigenen Termin ignorieren
       const conflicts = allBookings
         .filter(b => b.car === car && b.id !== editingId)
         .some(b => overlaps(start, end, b.start, b.end));
@@ -593,7 +625,6 @@
 
       try {
         if (editingId) {
-          // Update existing privat booking
           await db.collection("bookings").doc(editingId).set({
             car, name, start, end,
             type: "privat",
@@ -603,7 +634,6 @@
           setMsg("✅ Privatbuchung aktualisiert", "ok");
           clearEditMode();
         } else {
-          // Create new privat booking
           await db.collection("bookings").add({
             car, name, start, end,
             type: "privat",
@@ -621,9 +651,7 @@
       }
     });
 
-    // =========================
-    // Firestore: Live sync
-    // =========================
+    // Firestore sync
     function subscribeAll() {
       db.collection("bookings").onSnapshot((snap) => {
         allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
