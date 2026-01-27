@@ -97,11 +97,13 @@
     .item{
       border:1px solid #eee; border-radius:10px; padding:12px;
       display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff;
+      cursor:pointer;
     }
+    .item:hover{ background:#f9fafb; }
     .item strong{ display:block; }
     .meta{ color:#444; font-size:14px; }
     .small2{ color:#666; font-size:13px; }
-    .dangerText{ color:#b91c1c; :700; }
+    .dangerText{ color:#b91c1c; font-weight:700; }
 
     /* Calendar */
     #calendarWrap{ display:none; position:relative; }
@@ -115,22 +117,31 @@
     .fc{ max-width:100%; position:relative; }
     .fc .fc-view-harness{ overflow:hidden; border-radius:10px; }
 
-    /* Titel */
+    /* Titel (Datum oben) */
     .fc .fc-toolbar-title{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       max-width: 100%;
+      font-size: 1.05rem;
+      line-height: 1.15;
+    }
 
-      font-size:1.05rem;
-      line-height:1.15;
+    /* Toolbar nicht umbrechen lassen (Laptop/ Desktop) */
+    .fc .fc-toolbar{
+      flex-wrap: nowrap;
+      gap: 6px;
+    }
+    .fc .fc-button{
+      padding: .32em .55em;
+      font-size: 0.92em;
     }
 
     /* Handy: kleinere Titel + Buttons + Headerhöhen */
     @media (max-width: 600px){
-      .fc .fc-toolbar{ flex-wrap:wrap; gap:6px; }
-      .fc .fc-toolbar-title{ font-size:0.95em; }
-      .fc .fc-button{ padding:.30em .48em; font-size:0.9em; }
+      .fc .fc-toolbar{ flex-wrap: nowrap; gap:6px; }
+      .fc .fc-toolbar-title{ font-size:0.85rem; line-height:1.15; }
+      .fc .fc-button{ padding:.30em .48em; font-size:0.88em; }
 
       /* Datum/Day Header kleiner => weniger Überlappung */
       .fc .fc-col-header-cell-cushion{ font-size:0.78em; padding:2px 0; }
@@ -236,8 +247,8 @@
 
         <hr class="hr" />
         <div class="small">
-          Ansicht auf dem Handy: auf der Wochen-/Tagansicht: <b>lange drücken + ziehen</b>. Monat: <b>Tag antippen</b>.
-          <br/>Termine antippen → Details (Privattermine können so dann auch bearbeitet oder gelöscht werden).
+          Handy: Wochen-/Tagansicht: <b>lange drücken + ziehen</b>. Monat: <b>Tag antippen</b>.
+          <br/>Termine antippen → Details (Privat: bearbeiten/löschen). Liste ist ebenfalls antippbar.
         </div>
       </div>
 
@@ -251,9 +262,7 @@
         <div id="calendarWrap">
           <h2 style="margin:0 0 10px 0;">Kalenderansicht</h2>
           <div id="calendar"></div>
-          <div class="small" style="margin-top:10px;">
-            
-          </div>
+          <div class="small" style="margin-top:10px;"></div>
         </div>
       </div>
     </div>
@@ -345,6 +354,7 @@
       document.getElementById("editHint").style.display = "none";
     }
 
+    // ===== LIST RENDER (klickbar -> Modal) =====
     function renderList() {
       const wrap = document.getElementById("bookings");
       const docs = sortBookings(filteredBookings());
@@ -371,6 +381,10 @@
           </div>
           <div class="small2"><span class="pill">${b.id.slice(0,6)}…</span></div>
         `;
+
+        // ✅ Klick auf Liste öffnet Modal
+        div.addEventListener("click", () => openModalForBooking(b));
+
         wrap.appendChild(div);
       });
     }
@@ -392,18 +406,15 @@
       });
     }
 
-    // Toolbar: auf Handy "Heute" nicht entfernen
+    // Toolbar: "Heute" auch auf Handy behalten
     function setCalendarToolbarForWidth() {
       if (!calendar) return;
-      const isSmall = window.innerWidth < 600;
-
-      calendar.setOption("headerToolbar", isSmall
-        ? { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
-        : { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
+      calendar.setOption("headerToolbar",
+        { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
       );
     }
 
-    // Modal
+    // ===== MODAL =====
     const modalOverlay = document.getElementById("modalOverlay");
     const modalClose = document.getElementById("modalClose");
     const modalEdit = document.getElementById("modalEdit");
@@ -464,6 +475,7 @@
       }
     });
 
+    // ===== CALENDAR =====
     function ensureCalendar() {
       if (calendar) return;
 
@@ -506,7 +518,7 @@
 
           document.getElementById("start").value = toDatetimeLocal(start);
           document.getElementById("end").value   = toDatetimeLocal(end);
-          setMsg("✅ Zeit übernommen – du kannst sie oben anpassen.", "ok");
+          setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
         },
 
         select: (info) => {
@@ -514,7 +526,7 @@
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
-          setMsg("✅ Zeitraum übernommen – du kannst ihn oben anpassen.", "ok");
+          setMsg("✅ Zeitraum übernommen – du kannst ihn unten anpassen.", "ok");
         },
 
         eventClick: (info) => {
@@ -537,6 +549,7 @@
       calendar.addEventSource(events);
     }
 
+    // ===== FILTER =====
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
       document.querySelectorAll("button.car").forEach(b => {
@@ -554,6 +567,7 @@
       btn.addEventListener("click", () => setFilter(btn.dataset.car));
     });
 
+    // ===== VIEW TOGGLE =====
     function showListView() {
       document.getElementById("listWrap").style.display = "block";
       document.getElementById("calendarWrap").style.display = "none";
@@ -582,7 +596,7 @@
     document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
-    // Form
+    // ===== FORM =====
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("bookingForm").reset();
       clearEditMode();
@@ -636,6 +650,7 @@
       }
     });
 
+    // ===== FIRESTORE SYNC =====
     function subscribeAll() {
       db.collection("bookings").onSnapshot((snap) => {
         allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -648,6 +663,7 @@
       });
     }
 
+    // Start
     showListView();
     subscribeAll();
   </script>
