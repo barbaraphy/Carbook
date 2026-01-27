@@ -13,106 +13,216 @@
       color: #222;
     }
     .container {
-      max-width: 700px;
+      max-width: 860px;
       margin: auto;
       background: #fff;
-      padding: 30px;
+      padding: 26px;
       border-radius: 10px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-    h1 {
-      margin-top: 0;
-    }
-    p {
-      line-height: 1.6;
-    }
+    h1 { margin: 0 0 8px 0; }
+    p { line-height: 1.5; margin: 0 0 18px 0; color:#444; }
+
     .cars {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
     }
-    a.car {
+    button.car {
       display: block;
-      padding: 18px;
+      padding: 14px;
       text-align: center;
-      text-decoration: none;
+      border: none;
       background: #2563eb;
       color: #fff;
       border-radius: 8px;
-      font-weight: 600;
+      font-weight: 700;
+      cursor: pointer;
     }
-    a.car:hover {
-      background: #1e40af;
+    button.car:hover { background:#1e40af; }
+    button.car.active { outline: 3px solid rgba(37,99,235,.35); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-top: 22px;
     }
-    .hint {
-      margin-top: 25px;
-      font-size: 0.9em;
-      color: #555;
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      align-items: end;
+    }
+    label { font-size: 14px; color:#333; display:block; }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d6d6d6;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .full { grid-column: 1 / -1; }
+    .actions {
+      grid-column: 1 / -1;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.save { background:#16a34a; color:white; }
+    .btn.save:hover { background:#15803d; }
+    .btn.reset { background:#e5e7eb; color:#111; }
+    .btn.reset:hover { background:#d1d5db; }
+
+    .msg { margin-top: 8px; font-size: 14px; }
+    .msg.ok { color:#15803d; }
+    .msg.err { color:#b91c1c; }
+
+    hr { border: none; border-top: 1px solid #eee; margin: 22px 0; }
+
+    .topbar {
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter {
+      display:flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pill {
+      background:#f3f4f6;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color:#111;
+    }
+
+    .list {
+      display:grid;
+      gap: 10px;
+    }
+    .item {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 12px;
+      display:flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .item strong { display:block; }
+    .meta { color:#444; font-size: 14px; }
+    .small { color:#666; font-size: 13px; }
+    .danger { color:#b91c1c; font-weight: 700; }
+
+    @media (max-width: 720px) {
+      form { grid-template-columns: 1fr; }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <h1>AutoPlan</h1>
-    <p>
-      AutoPlan ist die interne Buchungsübersicht für unsere Praxisfahrzeuge.
-      Die Domizilfahrten sind eingetragen und die private Nutzung kann selbstständig eingefügt werden.
-    </p>
+    <div class="topbar">
+      <div>
+        <h1>AutoPlan</h1>
+        <p>Interne Buchungsseite für die Praxisfahrzeuge (ohne Google-Login). Bitte Buchungen korrekt erfassen.</p>
+      </div>
+      <div class="filter">
+        <span class="pill" id="statusPill">Filter: Alle Autos</span>
+      </div>
+    </div>
 
     <div class="cars">
-  <a class="car" href="https://calendar.google.com/calendar/u/1?cid=NmQ2ZTU0Mzk0MDFhYTA5YTM1NDVlNjZlZTBkZGU5YmUyZmY1ZmQ1MWRjMzYxNzhjZDZhNWMzYmY0NDU5MmNhOUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">🚗 Auto 1</a>
+      <button class="car active" data-car="ALL">Alle</button>
+      <button class="car" data-car="Auto 1">🚗 Auto 1</button>
+      <button class="car" data-car="Auto 2">🚗 Auto 2</button>
+      <button class="car" data-car="Auto 3">🚗 Auto 3</button>
+      <button class="car" data-car="Auto 4">🚗 Auto 4</button>
+    </div>
 
-  <a class="car" href="https://calendar.google.com/calendar/u/1?cid=N2NjZDkwYTJlOTYzNDU2OTkzMzVhMDYyYWM3Y2Q2N2UzYTYxMTA0YmQyZDMyYzdkZDU2NzVmZmJlZGQ5YWRjMkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">🚗 Auto 2</a>
+    <div class="grid">
+      <div>
+        <h2>Buchung erfassen</h2>
+        <form id="bookingForm">
+          <div>
+            <label for="car">Auto</label>
+            <select id="car" required>
+              <option value="Auto 1">Auto 1</option>
+              <option value="Auto 2">Auto 2</option>
+              <option value="Auto 3">Auto 3</option>
+              <option value="Auto 4">Auto 4</option>
+            </select>
+          </div>
 
-  <a class="car" href="https://calendar.google.com/calendar/u/1?cid=MmY3OTBkMDJmNzBhODNjNjM1YTg0NGZiZDYxY2U4YjRhNGNiOTMzMjBlZWEwNjZmOWMzYzQ3ZjM0NjUzZjgzMUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">🚗 Auto 3</a>
+          <div>
+            <label for="type">Art</label>
+            <select id="type" required>
+              <option value="domizil">Domizil</option>
+              <option value="privat">Privat</option>
+            </select>
+          </div>
 
-  <a class="car" href="https://calendar.google.com/calendar/u/1?cid=ZjUxZDZkM2E4MGVlNTQwZDM2OThlNWFjODJlMDU2YTFjN2IwNDI0OGM1ZDM4N2QyMTk2ZTAyYWJiYjM2NzBlNUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank">🚗 Auto 4</a>
-</div>
+          <div class="full">
+            <label for="name">Name</label>
+            <input id="name" required placeholder="Vorname Nachname" />
+          </div>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+          <div>
+            <label for="start">Start</label>
+            <input id="start" type="datetime-local" required />
+          </div>
 
-<script>
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
-    authDomain: "autoplan-6b642.firebaseapp.com",
-    projectId: "autoplan-6b642",
-    storageBucket: "autoplan-6b642.firebasestorage.app",
-    messagingSenderId: "667091765339",
-    appId: "1:667091765339:web:fea7cb7cb5391b5c85177e"
-  };
+          <div>
+            <label for="end">Ende</label>
+            <input id="end" type="datetime-local" required />
+          </div>
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
+          <div class="actions">
+            <button class="btn save" type="submit">Buchung speichern</button>
+            <button class="btn reset" type="button" id="resetBtn">Zurücksetzen</button>
+            <span class="small">Konflikte (Überschneidungen) werden blockiert.</span>
+          </div>
+        </form>
+        <div id="msg" class="msg"></div>
+      </div>
 
-     <button id="testBooking" style="
-      margin-top:20px;
-      padding:12px 18px;
-      font-size:16px;
-      border:none;
-      border-radius:6px;
-      background:#16a34a;
-      color:white;
-      cursor:pointer;
-    ">
-      Testbuchung speichern
-    </button>
+      <hr />
 
-    <div class="hint">
-      Hinweis: Diese Testfunktion speichert einen Eintrag in Firestore.
+      <div>
+        <h2>Buchungsübersicht</h2>
+        <div class="small" style="margin-bottom:10px;">
+          Tipp: Klick oben auf ein Auto, um zu filtern.
+        </div>
+        <div id="bookings" class="list">
+          <em class="small">Lade Buchungen …</em>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (Compat, ohne Build-Tool) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <script>
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
       authDomain: "autoplan-6b642.firebaseapp.com",
@@ -125,21 +235,160 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    document.getElementById("testBooking").addEventListener("click", async () => {
+    // --- State
+    let activeCarFilter = "ALL";
+    let unsubscribe = null;
+
+    // --- Helpers
+    function setMsg(text, kind) {
+      const el = document.getElementById("msg");
+      el.textContent = text || "";
+      el.className = "msg " + (kind || "");
+    }
+
+    function fmtLocal(dtStr) {
+      // dtStr is "YYYY-MM-DDTHH:MM" (from datetime-local) or ISO.
+      // We'll show it nicely without timezone pain.
+      if (!dtStr) return "";
+      // If it's ISO with seconds, keep first 16 to look similar
+      const s = dtStr.replace("T", " ").slice(0, 16);
+      return s;
+    }
+
+    function overlaps(aStart, aEnd, bStart, bEnd) {
+      // Treat as strings in ISO-ish order, works if format is YYYY-MM-DDTHH:MM...
+      // Convert to Date for safety.
+      const as = new Date(aStart);
+      const ae = new Date(aEnd);
+      const bs = new Date(bStart);
+      const be = new Date(bEnd);
+      return as < be && ae > bs;
+    }
+
+    function renderBookings(docs) {
+      const wrap = document.getElementById("bookings");
+      wrap.innerHTML = "";
+
+      if (!docs.length) {
+        wrap.innerHTML = `<em class="small">Keine Buchungen vorhanden.</em>`;
+        return;
+      }
+
+      docs.forEach(({ id, data }) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <strong>${data.car} — ${data.type}</strong>
+            <div class="meta">${fmtLocal(data.start)} → ${fmtLocal(data.end)}</div>
+            <div class="small">${data.name || ""}</div>
+          </div>
+          <div class="small">
+            <span class="pill">${id.slice(0,6)}…</span>
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    // --- Live query
+    function subscribeBookings() {
+      if (unsubscribe) unsubscribe();
+
+      let q = db.collection("bookings").orderBy("start", "asc");
+      if (activeCarFilter !== "ALL") q = q.where("car", "==", activeCarFilter);
+
+      unsubscribe = q.onSnapshot((snap) => {
+        const docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+        renderBookings(docs);
+      }, (err) => {
+        console.error(err);
+        document.getElementById("bookings").innerHTML =
+          `<div class="danger">Fehler beim Laden. (Console prüfen)</div>`;
+      });
+    }
+
+    // --- Filter buttons
+    document.querySelectorAll("button.car").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("button.car").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeCarFilter = btn.dataset.car;
+
+        const pill = document.getElementById("statusPill");
+        pill.textContent = activeCarFilter === "ALL" ? "Filter: Alle Autos" : `Filter: ${activeCarFilter}`;
+
+        subscribeBookings();
+      });
+    });
+
+    // --- Reset
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("bookingForm").reset();
+      setMsg("", "");
+    });
+
+    // --- Create booking (with conflict check)
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg("", "");
+
+      const car = document.getElementById("car").value;
+      const type = document.getElementById("type").value;
+      const name = document.getElementById("name").value.trim();
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+
+      if (!name) return setMsg("Bitte Name eingeben.", "err");
+      if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
+      if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
+
       try {
-        await db.collection("bookings").add({
-          car: "Auto 1",
-          name: "Web-Test",
-          start: new Date().toISOString(),
-          end: new Date().toISOString(),
-          type: "test"
+        // Conflict check (same car, overlapping times)
+        // We query relevant range: bookings where start < end AND end > start.
+        // With Firestore limitations, do a coarse query on same car and around time window then filter in JS.
+        const snap = await db.collection("bookings")
+          .where("car", "==", car)
+          .orderBy("start", "asc")
+          .get();
+
+        const conflicts = snap.docs.some(d => {
+          const b = d.data();
+          return overlaps(start, end, b.start, b.end);
         });
-        alert("✅ Buchung erfolgreich gespeichert");
-      } catch (e) {
-        alert("❌ Fehler beim Speichern (Details in der Konsole)");
-        console.error(e);
+
+        if (conflicts) {
+          return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits gebucht.", "err");
+        }
+
+        await db.collection("bookings").add({
+          car,
+          type,
+          name,
+          start,
+          end,
+          createdAt: new Date().toISOString()
+        });
+
+        setMsg("✅ Buchung gespeichert", "ok");
+        e.target.reset();
+
+        // optional: switch filter to that car so user sees it immediately
+        activeCarFilter = car;
+        document.querySelectorAll("button.car").forEach(b => {
+          b.classList.toggle("active", b.dataset.car === car);
+        });
+        document.getElementById("statusPill").textContent = `Filter: ${car}`;
+        subscribeBookings();
+
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Speichern (Details in der Konsole)", "err");
       }
     });
+
+    // initial load
+    subscribeBookings();
   </script>
 </body>
 </html>
