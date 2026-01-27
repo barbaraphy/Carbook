@@ -4,35 +4,59 @@
   <meta charset="UTF-8" />
   <title>AutoPlan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- FullCalendar (Kalenderansicht) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f5f6f8;
       margin: 0;
-      padding: 40px 20px;
+      padding: 22px 14px;
       color: #222;
     }
     .container {
-      max-width: 860px;
+      max-width: 1050px;
       margin: auto;
       background: #fff;
-      padding: 26px;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
-    h1 { margin: 0 0 8px 0; }
-    p { line-height: 1.5; margin: 0 0 18px 0; color:#444; }
+    h1 { margin: 0 0 6px 0; }
+    p  { margin: 0 0 14px 0; color:#444; line-height:1.5; }
+
+    .topbar {
+      display:flex;
+      justify-content: space-between;
+      align-items:flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .pill {
+      background:#f3f4f6;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color:#111;
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+    }
+    .legend-dot { width:10px; height:10px; border-radius:99px; display:inline-block; }
+    .dot-domizil { background:#2563eb; }
+    .dot-privat  { background:#16a34a; }
 
     .cars {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 10px 0 16px 0;
     }
     button.car {
-      display: block;
-      padding: 14px;
-      text-align: center;
+      padding: 12px;
       border: none;
       background: #2563eb;
       color: #fff;
@@ -43,20 +67,43 @@
     button.car:hover { background:#1e40af; }
     button.car.active { outline: 3px solid rgba(37,99,235,.35); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      margin-top: 22px;
+    .viewToggle {
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap: wrap;
+      margin: 6px 0 14px 0;
+    }
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background:#e5e7eb;
+      color:#111;
+    }
+    .btn:hover { background:#d1d5db; }
+    .btn.primary { background:#16a34a; color:#fff; }
+    .btn.primary:hover { background:#15803d; }
+    .btn.active { outline: 3px solid rgba(17,24,39,.15); }
+
+    .layout {
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      align-items:start;
     }
 
-    form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 12px;
-      align-items: end;
+    .card {
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 14px;
+      background:#fff;
     }
-    label { font-size: 14px; color:#333; display:block; }
+
+    form { display:grid; gap: 10px; }
+    label { display:block; font-size: 14px; color:#333; }
     input, select {
       width: 100%;
       padding: 10px;
@@ -65,58 +112,17 @@
       font-size: 14px;
       box-sizing: border-box;
     }
-    .full { grid-column: 1 / -1; }
-    .actions {
-      grid-column: 1 / -1;
-      display:flex;
-      gap: 10px;
-      align-items:center;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-    .btn {
-      padding: 12px 16px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn.save { background:#16a34a; color:white; }
-    .btn.save:hover { background:#15803d; }
-    .btn.reset { background:#e5e7eb; color:#111; }
-    .btn.reset:hover { background:#d1d5db; }
-
-    .msg { margin-top: 8px; font-size: 14px; }
+    .row2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .actions { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; margin-top: 2px; }
+    .msg { margin-top: 6px; font-size: 14px; }
     .msg.ok { color:#15803d; }
     .msg.err { color:#b91c1c; }
 
-    hr { border: none; border-top: 1px solid #eee; margin: 22px 0; }
+    .small { font-size: 13px; color:#555; line-height:1.35; }
+    .hr { border:none; border-top:1px solid #eee; margin: 12px 0; }
 
-    .topbar {
-      display:flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .filter {
-      display:flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .pill {
-      background:#f3f4f6;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 13px;
-      color:#111;
-    }
-
-    .list {
-      display:grid;
-      gap: 10px;
-    }
+    /* List */
+    .list { display:grid; gap: 10px; }
     .item {
       border: 1px solid #eee;
       border-radius: 10px;
@@ -125,14 +131,19 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
+      background:#fff;
     }
     .item strong { display:block; }
     .meta { color:#444; font-size: 14px; }
-    .small { color:#666; font-size: 13px; }
+    .small2 { color:#666; font-size: 13px; }
     .danger { color:#b91c1c; font-weight: 700; }
 
-    @media (max-width: 720px) {
-      form { grid-template-columns: 1fr; }
+    /* Calendar container */
+    #calendarWrap { display:none; }
+    #calendar { border: 1px solid #eee; border-radius: 10px; padding: 10px; }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -142,10 +153,11 @@
     <div class="topbar">
       <div>
         <h1>AutoPlan</h1>
-        <p>Interne Buchungsseite für die Praxisfahrzeuge (ohne Google-Login). Bitte Buchungen korrekt erfassen.</p>
+        <p>Privatbuchungen erfassen. Domiziltermine werden als <b>Fixtermine</b> (blau) hinterlegt und blockieren automatisch.</p>
       </div>
-      <div class="filter">
-        <span class="pill" id="statusPill">Filter: Alle Autos</span>
+      <div class="pill" title="Farblegende">
+        <span class="legend-dot dot-domizil"></span> Domizil
+        <span class="legend-dot dot-privat" style="margin-left:6px;"></span> Privat
       </div>
     </div>
 
@@ -157,9 +169,17 @@
       <button class="car" data-car="Auto 4">🚗 Auto 4</button>
     </div>
 
-    <div class="grid">
-      <div>
-        <h2>Buchung erfassen</h2>
+    <div class="viewToggle">
+      <button class="btn active" id="showList">Liste</button>
+      <button class="btn" id="showCalendar">Kalender (Woche)</button>
+      <span class="pill" id="statusPill">Filter: Alle Autos</span>
+    </div>
+
+    <div class="layout">
+      <!-- Left: Booking form -->
+      <div class="card">
+        <h2 style="margin:0 0 10px 0;">Privat buchen</h2>
+
         <form id="bookingForm">
           <div>
             <label for="car">Auto</label>
@@ -172,46 +192,48 @@
           </div>
 
           <div>
-            <label for="type">Art</label>
-            <select id="type" required>
-              <option value="domizil">Domizil</option>
-              <option value="privat">Privat</option>
-            </select>
+            <label for="name">Vorname</label>
+            <input id="name" required placeholder="z.B. Anna" />
           </div>
 
-          <div class="full">
-            <label for="name">Name</label>
-            <input id="name" required placeholder="Vorname Nachname" />
-          </div>
-
-          <div>
-            <label for="start">Start</label>
-            <input id="start" type="datetime-local" required />
-          </div>
-
-          <div>
-            <label for="end">Ende</label>
-            <input id="end" type="datetime-local" required />
+          <div class="row2">
+            <div>
+              <label for="start">Start</label>
+              <input id="start" type="datetime-local" required />
+            </div>
+            <div>
+              <label for="end">Ende</label>
+              <input id="end" type="datetime-local" required />
+            </div>
           </div>
 
           <div class="actions">
-            <button class="btn save" type="submit">Buchung speichern</button>
-            <button class="btn reset" type="button" id="resetBtn">Zurücksetzen</button>
-            <span class="small">Konflikte (Überschneidungen) werden blockiert.</span>
+            <button class="btn primary" type="submit">Buchung speichern</button>
+            <button class="btn" type="button" id="resetBtn">Zurücksetzen</button>
           </div>
         </form>
+
         <div id="msg" class="msg"></div>
+
+        <hr class="hr" />
+        <div class="small">
+          Tipp: Im Kalender kannst du in ein freies Zeitfenster klicken – Start/Ende werden dann vorgefüllt.
+        </div>
       </div>
 
-      <hr />
-
+      <!-- Right: List + Calendar -->
       <div>
-        <h2>Buchungsübersicht</h2>
-        <div class="small" style="margin-bottom:10px;">
-          Tipp: Klick oben auf ein Auto, um zu filtern.
+        <div id="listWrap">
+          <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
+          <div id="bookings" class="list"><em class="small2">Lade Buchungen …</em></div>
         </div>
-        <div id="bookings" class="list">
-          <em class="small">Lade Buchungen …</em>
+
+        <div id="calendarWrap">
+          <h2 style="margin:0 0 10px 0;">Kalenderansicht</h2>
+          <div id="calendar"></div>
+          <div class="small" style="margin-top:10px;">
+            Hinweis: Auf dem Termin steht direkt der <b>Vorname</b> (und das Auto).
+          </div>
         </div>
       </div>
     </div>
@@ -221,8 +243,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
   <script>
-    // Firebase configuration
+    // =========================
+    // Firebase config
+    // =========================
     const firebaseConfig = {
       apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
       authDomain: "autoplan-6b642.firebaseapp.com",
@@ -235,11 +262,19 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- State
+    // =========================
+    // State
+    // =========================
     let activeCarFilter = "ALL";
-    let unsubscribe = null;
+    let allBookings = []; // {id, ...data}
+    let calendar = null;
 
-    // --- Helpers
+    const COLOR_DOMIZIL = "#2563eb"; // blau
+    const COLOR_PRIVAT  = "#16a34a"; // grün
+
+    // =========================
+    // Helpers
+    // =========================
     function setMsg(text, kind) {
       const el = document.getElementById("msg");
       el.textContent = text || "";
@@ -247,17 +282,12 @@
     }
 
     function fmtLocal(dtStr) {
-      // dtStr is "YYYY-MM-DDTHH:MM" (from datetime-local) or ISO.
-      // We'll show it nicely without timezone pain.
       if (!dtStr) return "";
-      // If it's ISO with seconds, keep first 16 to look similar
-      const s = dtStr.replace("T", " ").slice(0, 16);
-      return s;
+      // dtStr may be "YYYY-MM-DDTHH:MM" or ISO; keep human readable
+      return dtStr.replace("T", " ").slice(0, 16);
     }
 
     function overlaps(aStart, aEnd, bStart, bEnd) {
-      // Treat as strings in ISO-ish order, works if format is YYYY-MM-DDTHH:MM...
-      // Convert to Date for safety.
       const as = new Date(aStart);
       const ae = new Date(aEnd);
       const bs = new Date(bStart);
@@ -265,42 +295,231 @@
       return as < be && ae > bs;
     }
 
-    function renderBookings(docs) {
-      const wrap = document.getElementById("bookings");
-      wrap.innerHTML = "";
+    function filteredBookings() {
+      if (activeCarFilter === "ALL") return allBookings.slice();
+      return allBookings.filter(b => b.car === activeCarFilter);
+    }
 
+    function sortBookings(arr) {
+      return arr.sort((x, y) => (x.start || "").localeCompare(y.start || ""));
+    }
+
+    // =========================
+    // Render: List
+    // =========================
+    function renderList() {
+      const wrap = document.getElementById("bookings");
+      const docs = sortBookings(filteredBookings());
+
+      wrap.innerHTML = "";
       if (!docs.length) {
-        wrap.innerHTML = `<em class="small">Keine Buchungen vorhanden.</em>`;
+        wrap.innerHTML = `<em class="small2">Keine Buchungen vorhanden.</em>`;
         return;
       }
 
-      docs.forEach(({ id, data }) => {
+      docs.forEach((b) => {
         const div = document.createElement("div");
         div.className = "item";
+
+        const isDomizil = b.type === "domizil";
+        const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
+        div.style.borderLeft = `6px solid ${color}`;
+
         div.innerHTML = `
           <div>
-            <strong>${data.car} — ${data.type}</strong>
-            <div class="meta">${fmtLocal(data.start)} → ${fmtLocal(data.end)}</div>
-            <div class="small">${data.name || ""}</div>
+            <strong>${b.car} — ${isDomizil ? "Domizil" : "Privat"}</strong>
+            <div class="meta">${fmtLocal(b.start)} → ${fmtLocal(b.end)}</div>
+            <div class="small2">${(b.name || "").trim()}</div>
           </div>
-          <div class="small">
-            <span class="pill">${id.slice(0,6)}…</span>
+          <div class="small2">
+            <span class="pill">${b.id.slice(0,6)}…</span>
           </div>
         `;
         wrap.appendChild(div);
       });
     }
 
-    // --- Live query
-    function subscribeBookings() {
-      if (unsubscribe) unsubscribe();
+    // =========================
+    // Render: Calendar
+    // =========================
+    function bookingsToEvents(bookings) {
+      const docs = sortBookings(bookings.slice());
+      return docs.map(b => {
+        const isDomizil = b.type === "domizil";
+        const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
 
-      let q = db.collection("bookings").orderBy("start", "asc");
-      if (activeCarFilter !== "ALL") q = q.where("car", "==", activeCarFilter);
+        // Im Kalender direkt sichtbar: "Auto X – Vorname"
+        const who = (b.name || "").trim() || (isDomizil ? "Domizil" : "Privat");
+        const title = `${b.car} – ${who}`;
 
-      unsubscribe = q.onSnapshot((snap) => {
-        const docs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
-        renderBookings(docs);
+        return {
+          id: b.id,
+          title,
+          start: b.start,
+          end: b.end,
+          backgroundColor: color,
+          borderColor: color
+        };
+      });
+    }
+
+    function ensureCalendar() {
+      if (calendar) return;
+
+      const calEl = document.getElementById("calendar");
+      calendar = new FullCalendar.Calendar(calEl, {
+        initialView: "timeGridWeek",
+        height: "auto",
+        nowIndicator: true,
+        firstDay: 1, // Monday
+        slotMinTime: "06:00:00",
+        slotMaxTime: "21:00:00",
+        allDaySlot: false,
+        expandRows: true,
+        locale: "de",
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "timeGridWeek,timeGridDay"
+        },
+        selectable: true,
+        select: (info) => {
+          // Prefill form with selected slot
+          const carSel = document.getElementById("car");
+          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
+
+          document.getElementById("start").value = toDatetimeLocal(info.start);
+          document.getElementById("end").value = toDatetimeLocal(info.end);
+        }
+      });
+
+      calendar.render();
+    }
+
+    function renderCalendar() {
+      ensureCalendar();
+      const events = bookingsToEvents(filteredBookings());
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+    }
+
+    function toDatetimeLocal(dateObj) {
+      // Returns YYYY-MM-DDTHH:MM in local time
+      const pad = (n) => String(n).padStart(2, "0");
+      const d = new Date(dateObj);
+      const y = d.getFullYear();
+      const m = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const h = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${y}-${m}-${day}T${h}:${min}`;
+    }
+
+    // =========================
+    // UI: Filter buttons
+    // =========================
+    function setFilter(newFilter) {
+      activeCarFilter = newFilter;
+
+      document.querySelectorAll("button.car").forEach(b => {
+        b.classList.toggle("active", b.dataset.car === newFilter);
+      });
+
+      const pill = document.getElementById("statusPill");
+      pill.textContent = (newFilter === "ALL") ? "Filter: Alle Autos" : `Filter: ${newFilter}`;
+
+      renderList();
+      if (document.getElementById("calendarWrap").style.display !== "none") {
+        renderCalendar();
+      }
+    }
+
+    document.querySelectorAll("button.car").forEach(btn => {
+      btn.addEventListener("click", () => setFilter(btn.dataset.car));
+    });
+
+    // =========================
+    // UI: Toggle views
+    // =========================
+    function showListView() {
+      document.getElementById("listWrap").style.display = "block";
+      document.getElementById("calendarWrap").style.display = "none";
+      document.getElementById("showList").classList.add("active");
+      document.getElementById("showCalendar").classList.remove("active");
+    }
+
+    function showCalendarView() {
+      document.getElementById("listWrap").style.display = "none";
+      document.getElementById("calendarWrap").style.display = "block";
+      document.getElementById("showCalendar").classList.add("active");
+      document.getElementById("showList").classList.remove("active");
+      renderCalendar();
+    }
+
+    document.getElementById("showList").addEventListener("click", showListView);
+    document.getElementById("showCalendar").addEventListener("click", showCalendarView);
+
+    // =========================
+    // Form: Reset + Submit (Privat only)
+    // =========================
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("bookingForm").reset();
+      setMsg("", "");
+    });
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg("", "");
+
+      const car = document.getElementById("car").value;
+      const name = document.getElementById("name").value.trim();
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+
+      if (!name) return setMsg("Bitte Vorname eingeben.", "err");
+      if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
+      if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
+
+      // Konfliktprüfung gegen alles (inkl. Domizil) für dieses Auto
+      const conflicts = allBookings
+        .filter(b => b.car === car)
+        .some(b => overlaps(start, end, b.start, b.end));
+
+      if (conflicts) {
+        return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits belegt (Domizil oder Privat).", "err");
+      }
+
+      try {
+        await db.collection("bookings").add({
+          car,
+          name,
+          start,
+          end,
+          type: "privat",
+          createdAt: new Date().toISOString()
+        });
+
+        setMsg("✅ Privatbuchung gespeichert", "ok");
+        e.target.reset();
+
+        // Optional: nach Speichern direkt Filter auf dieses Auto setzen
+        setFilter(car);
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Speichern (Details in der Konsole)", "err");
+      }
+    });
+
+    // =========================
+    // Firestore: Live sync (ohne Index-Probleme)
+    // =========================
+    function subscribeAll() {
+      db.collection("bookings").onSnapshot((snap) => {
+        allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderList();
+        if (document.getElementById("calendarWrap").style.display !== "none") {
+          renderCalendar();
+        }
       }, (err) => {
         console.error(err);
         document.getElementById("bookings").innerHTML =
@@ -308,87 +527,9 @@
       });
     }
 
-    // --- Filter buttons
-    document.querySelectorAll("button.car").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("button.car").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        activeCarFilter = btn.dataset.car;
-
-        const pill = document.getElementById("statusPill");
-        pill.textContent = activeCarFilter === "ALL" ? "Filter: Alle Autos" : `Filter: ${activeCarFilter}`;
-
-        subscribeBookings();
-      });
-    });
-
-    // --- Reset
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      document.getElementById("bookingForm").reset();
-      setMsg("", "");
-    });
-
-    // --- Create booking (with conflict check)
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      setMsg("", "");
-
-      const car = document.getElementById("car").value;
-      const type = document.getElementById("type").value;
-      const name = document.getElementById("name").value.trim();
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-
-      if (!name) return setMsg("Bitte Name eingeben.", "err");
-      if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
-      if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
-
-      try {
-        // Conflict check (same car, overlapping times)
-        // We query relevant range: bookings where start < end AND end > start.
-        // With Firestore limitations, do a coarse query on same car and around time window then filter in JS.
-        const snap = await db.collection("bookings")
-          .where("car", "==", car)
-          .orderBy("start", "asc")
-          .get();
-
-        const conflicts = snap.docs.some(d => {
-          const b = d.data();
-          return overlaps(start, end, b.start, b.end);
-        });
-
-        if (conflicts) {
-          return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits gebucht.", "err");
-        }
-
-        await db.collection("bookings").add({
-          car,
-          type,
-          name,
-          start,
-          end,
-          createdAt: new Date().toISOString()
-        });
-
-        setMsg("✅ Buchung gespeichert", "ok");
-        e.target.reset();
-
-        // optional: switch filter to that car so user sees it immediately
-        activeCarFilter = car;
-        document.querySelectorAll("button.car").forEach(b => {
-          b.classList.toggle("active", b.dataset.car === car);
-        });
-        document.getElementById("statusPill").textContent = `Filter: ${car}`;
-        subscribeBookings();
-
-      } catch (err) {
-        console.error(err);
-        setMsg("❌ Fehler beim Speichern (Details in der Konsole)", "err");
-      }
-    });
-
-    // initial load
-    subscribeBookings();
+    // Start
+    showListView();
+    subscribeAll();
   </script>
 </body>
 </html>
