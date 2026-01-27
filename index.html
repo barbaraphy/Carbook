@@ -57,7 +57,7 @@
     .btn.danger:hover{ background:#b91c1c; }
     .btn.active{ outline:3px solid rgba(17,24,39,.15); }
 
-    /* Responsive Layout */
+    /* ===== Layout ===== */
     .layout{
       display:grid;
       gap:16px;
@@ -65,12 +65,8 @@
       grid-template-columns: 340px minmax(0, 1fr);
     }
     .layout > *{ min-width:0; }
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr; }
-    }
-    @media (min-width: 1200px){
-      .layout{ grid-template-columns: 380px minmax(0, 1fr); }
-    }
+    @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+    @media (min-width: 1200px){ .layout{ grid-template-columns: 380px minmax(0, 1fr); } }
 
     .card{
       border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
@@ -83,7 +79,12 @@
       width:100%; padding:10px; border:1px solid #d6d6d6; border-radius:8px;
       font-size:14px; box-sizing:border-box;
     }
+
+    /* Standard: Start/Ende nebeneinander */
     .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    /* Desktop nebeneinander: Start/Ende untereinander */
+    @media (min-width: 981px){ .row2{ grid-template-columns: 1fr; } }
+
     .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:2px; }
     .msg{ margin-top:6px; font-size:14px; }
     .msg.ok{ color:#15803d; }
@@ -114,17 +115,23 @@
     .fc{ max-width:100%; position:relative; }
     .fc .fc-view-harness{ overflow:hidden; border-radius:10px; }
 
-    /* Titel kompakt */
+    /* Titel */
     .fc .fc-toolbar-title{
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       max-width: 100%;
     }
+
+    /* Handy: kleinere Titel + Buttons + Headerhöhen */
     @media (max-width: 600px){
       .fc .fc-toolbar{ flex-wrap:wrap; gap:6px; }
-      .fc .fc-toolbar-title{ font-size:1em; }
-      .fc .fc-button{ padding:.35em .55em; }
+      .fc .fc-toolbar-title{ font-size:0.95em; }
+      .fc .fc-button{ padding:.30em .48em; font-size:0.9em; }
+
+      /* Datum/Day Header kleiner => weniger Überlappung */
+      .fc .fc-col-header-cell-cushion{ font-size:0.78em; padding:2px 0; }
+      .fc .fc-daygrid-day-number{ font-size:0.8em; padding:2px; }
 
       /* Handy: Drag in Woche/Tag erlauben */
       .fc .fc-timegrid-body,
@@ -184,7 +191,7 @@
     </div>
 
     <div class="layout">
-      <!-- Left: Booking form -->
+      <!-- Left -->
       <div class="card">
         <h2 style="margin:0 0 10px 0;">Privat buchen</h2>
 
@@ -231,7 +238,7 @@
         </div>
       </div>
 
-      <!-- Right: List + Calendar -->
+      <!-- Right -->
       <div class="card">
         <div id="listWrap">
           <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
@@ -267,7 +274,7 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -283,7 +290,6 @@
       messagingSenderId: "667091765339",
       appId: "1:667091765339:web:fea7cb7cb5391b5c85177e"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -383,16 +389,18 @@
       });
     }
 
+    // Toolbar: auf Handy "Heute" nicht entfernen
     function setCalendarToolbarForWidth() {
       if (!calendar) return;
       const isSmall = window.innerWidth < 600;
+
       calendar.setOption("headerToolbar", isSmall
-        ? { left: "prev,next", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
+        ? { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
         : { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
       );
     }
 
-    // Modal wiring
+    // Modal
     const modalOverlay = document.getElementById("modalOverlay");
     const modalClose = document.getElementById("modalClose");
     const modalEdit = document.getElementById("modalEdit");
@@ -470,7 +478,6 @@
         locale: "de",
         buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
-
         titleFormat: { year: "numeric", month: "short", day: "numeric" },
 
         selectable: true,
@@ -513,11 +520,6 @@
           openModalForBooking(b);
         },
 
-        // FIX: "Heute" Button muss funktionieren -> nach jedem View-Wechsel sicherstellen
-        datesSet: () => {
-          // nichts extra nötig, aber sorgt dafür dass FullCalendar intern sauber ist
-        },
-
         windowResize: () => setCalendarToolbarForWidth()
       });
 
@@ -534,7 +536,6 @@
 
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
-
       document.querySelectorAll("button.car").forEach(b => {
         b.classList.toggle("active", b.dataset.car === newFilter);
       });
@@ -569,9 +570,7 @@
 
       ensureCalendar();
       calendar.changeView(viewName);
-      // FIX: "Heute" button & nav stability
       calendar.updateSize();
-
       setCalendarToolbarForWidth();
       renderCalendar();
     }
