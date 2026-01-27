@@ -89,3 +89,35 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 </script>
+
+    <button id="testBooking" style="
+  margin-top:20px;
+  padding:12px 18px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#16a34a;
+  color:white;
+  cursor:pointer;
+">
+  Testbuchung speichern
+</button>
+
+<script>
+  document.getElementById("testBooking").addEventListener("click", async () => {
+    try {
+      await db.collection("bookings").add({
+        car: "Auto 1",
+        name: "Web-Test",
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        type: "test"
+      });
+      alert("✅ Buchung erfolgreich gespeichert");
+    } catch (e) {
+      alert("❌ Fehler beim Speichern");
+      console.error(e);
+    }
+  });
+</script>
+    
