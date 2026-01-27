@@ -5,147 +5,122 @@
   <title>AutoPlan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- FullCalendar (Kalenderansicht) -->
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
 
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f6f8;
-      margin: 0;
-      padding: 22px 14px;
-      color: #222;
+    body{
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:#f5f6f8; margin:0; padding:22px 14px; color:#222;
     }
-    .container {
-      max-width: 1050px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    .container{
+      max-width:1050px; margin:auto; background:#fff; padding:20px;
+      border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08);
     }
-    h1 { margin: 0 0 6px 0; }
-    p  { margin: 0 0 14px 0; color:#444; line-height:1.5; }
+    h1{ margin:0 0 6px 0; }
+    p{ margin:0 0 14px 0; color:#444; line-height:1.5; }
 
-    .topbar {
-      display:flex;
-      justify-content: space-between;
-      align-items:flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
+    .topbar{
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:12px; flex-wrap:wrap; margin-bottom:10px;
     }
-    .pill {
-      background:#f3f4f6;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 13px;
-      color:#111;
-      display:inline-flex;
-      gap: 8px;
-      align-items:center;
+    .pill{
+      background:#f3f4f6; border-radius:999px; padding:6px 10px;
+      font-size:13px; color:#111; display:inline-flex; gap:8px; align-items:center;
     }
-    .legend-dot { width:10px; height:10px; border-radius:99px; display:inline-block; }
-    .dot-domizil { background:#2563eb; }
-    .dot-privat  { background:#16a34a; }
+    .legend-dot{ width:10px; height:10px; border-radius:99px; display:inline-block; }
+    .dot-domizil{ background:#2563eb; }
+    .dot-privat{ background:#16a34a; }
 
-    .cars {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      margin: 10px 0 16px 0;
+    .cars{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:10px; margin:10px 0 16px 0;
     }
-    button.car {
-      padding: 12px;
-      border: none;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 8px;
-      font-weight: 700;
-      cursor: pointer;
+    button.car{
+      padding:12px; border:none; background:#2563eb; color:#fff;
+      border-radius:8px; font-weight:700; cursor:pointer;
     }
-    button.car:hover { background:#1e40af; }
-    button.car.active { outline: 3px solid rgba(37,99,235,.35); }
+    button.car:hover{ background:#1e40af; }
+    button.car.active{ outline:3px solid rgba(37,99,235,.35); }
 
-    .viewToggle {
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      flex-wrap: wrap;
-      margin: 6px 0 14px 0;
+    .viewToggle{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0 14px 0;
     }
-    .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-weight: 700;
-      cursor: pointer;
-      background:#e5e7eb;
-      color:#111;
+    .btn{
+      border:none; border-radius:8px; padding:10px 12px; font-weight:700;
+      cursor:pointer; background:#e5e7eb; color:#111;
     }
-    .btn:hover { background:#d1d5db; }
-    .btn.primary { background:#16a34a; color:#fff; }
-    .btn.primary:hover { background:#15803d; }
-    .btn.active { outline: 3px solid rgba(17,24,39,.15); }
+    .btn:hover{ background:#d1d5db; }
+    .btn.primary{ background:#16a34a; color:#fff; }
+    .btn.primary:hover{ background:#15803d; }
+    .btn.danger{ background:#dc2626; color:#fff; }
+    .btn.danger:hover{ background:#b91c1c; }
+    .btn.active{ outline:3px solid rgba(17,24,39,.15); }
 
-    /* Robust responsive layout */
-    .layout {
-      display:grid;
-      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-      gap: 16px;
-      align-items:start;
+    /* Responsive Layout: breit nebeneinander, bei weniger Platz untereinander */
+    .layout{
+      display:grid; gap:16px; align-items:start;
+      grid-template-columns: 340px minmax(0, 1fr);
+    }
+    .layout > *{ min-width:0; } /* verhindert Überlappung */
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+    @media (min-width: 1200px){
+      .layout{ grid-template-columns: 380px minmax(0, 1fr); }
     }
 
-    .card {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      padding: 14px;
-      background:#fff;
+    .card{
+      border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
     }
-
-    form { display:grid; gap: 10px; }
-    label { display:block; font-size: 14px; color:#333; }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #d6d6d6;
-      border-radius: 8px;
-      font-size: 14px;
-      box-sizing: border-box;
+    form{ display:grid; gap:10px; }
+    label{ display:block; font-size:14px; color:#333; }
+    input,select{
+      width:100%; padding:10px; border:1px solid #d6d6d6; border-radius:8px;
+      font-size:14px; box-sizing:border-box;
     }
-    .row2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .actions { display:flex; gap: 10px; align-items:center; flex-wrap: wrap; margin-top: 2px; }
-    .msg { margin-top: 6px; font-size: 14px; }
-    .msg.ok { color:#15803d; }
-    .msg.err { color:#b91c1c; }
-
-    .small { font-size: 13px; color:#555; line-height:1.35; }
-    .hr { border:none; border-top:1px solid #eee; margin: 12px 0; }
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:2px; }
+    .msg{ margin-top:6px; font-size:14px; }
+    .msg.ok{ color:#15803d; }
+    .msg.err{ color:#b91c1c; }
+    .small{ font-size:13px; color:#555; line-height:1.35; }
+    .hr{ border:none; border-top:1px solid #eee; margin:12px 0; }
 
     /* List */
-    .list { display:grid; gap: 10px; }
-    .item {
-      border: 1px solid #eee;
-      border-radius: 10px;
-      padding: 12px;
-      display:flex;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      background:#fff;
+    .list{ display:grid; gap:10px; }
+    .item{
+      border:1px solid #eee; border-radius:10px; padding:12px;
+      display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff;
     }
-    .item strong { display:block; }
-    .meta { color:#444; font-size: 14px; }
-    .small2 { color:#666; font-size: 13px; }
-    .danger { color:#b91c1c; font-weight: 700; }
+    .item strong{ display:block; }
+    .meta{ color:#444; font-size:14px; }
+    .small2{ color:#666; font-size:13px; }
+    .dangerText{ color:#b91c1c; font-weight:700; }
 
-    /* Calendar container */
-    #calendarWrap { display:none; }
-    #calendar { border: 1px solid #eee; border-radius: 10px; padding: 10px; }
-
-    @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
+    /* Calendar */
+    #calendarWrap{ display:none; }
+    #calendar{
+      border:1px solid #eee; border-radius:10px; padding:10px;
+      overflow:hidden;
     }
+
+    /* Modal */
+    .modalOverlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; padding:16px;
+      z-index:9999;
+    }
+    .modal{
+      width:min(560px, 100%); background:#fff; border-radius:12px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25); padding:16px;
+    }
+    .modal h3{ margin:0 0 10px 0; }
+    .modal .row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
+    .kv{ display:grid; grid-template-columns: 140px 1fr; gap:8px 12px; }
+    .kv div{ font-size:14px; }
+    .kv .k{ color:#555; }
+    .kv .v{ color:#111; font-weight:600; }
   </style>
 </head>
 
@@ -210,8 +185,9 @@
           </div>
 
           <div class="actions">
-            <button class="btn primary" type="submit">Buchung speichern</button>
+            <button class="btn primary" type="submit" id="saveBtn">Buchung speichern</button>
             <button class="btn" type="button" id="resetBtn">Zurücksetzen</button>
+            <span class="small" id="editHint" style="display:none;">Bearbeitungsmodus aktiv</span>
           </div>
         </form>
 
@@ -220,6 +196,7 @@
         <hr class="hr" />
         <div class="small">
           Tipp: Im Kalender kannst du ein Zeitfenster markieren – Start/Ende werden dann vorgefüllt.
+          <br/>Termine anklicken → Details (Privat: bearbeiten/löschen).
         </div>
       </div>
 
@@ -241,7 +218,25 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs (Compat, ohne Build-Tool) -->
+  <!-- Modal -->
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3 id="modalTitle">Termin</h3>
+      <div class="kv">
+        <div class="k">Auto</div><div class="v" id="mCar"></div>
+        <div class="k">Art</div><div class="v" id="mType"></div>
+        <div class="k">Name</div><div class="v" id="mName"></div>
+        <div class="k">Zeit</div><div class="v" id="mTime"></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="modalClose">Schließen</button>
+        <button class="btn" id="modalEdit" style="display:none;">Bearbeiten</button>
+        <button class="btn danger" id="modalDelete" style="display:none;">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -270,6 +265,8 @@
     let activeCarFilter = "ALL";
     let allBookings = []; // {id, ...data}
     let calendar = null;
+
+    let editingId = null; // doc id for edit mode (privat only)
 
     const COLOR_DOMIZIL = "#2563eb"; // blau
     const COLOR_PRIVAT  = "#16a34a"; // grün
@@ -303,6 +300,28 @@
 
     function sortBookings(arr) {
       return arr.slice().sort((x, y) => (x.start || "").localeCompare(y.start || ""));
+    }
+
+    function toDatetimeLocal(dateObj) {
+      const pad = (n) => String(n).padStart(2, "0");
+      const d = new Date(dateObj);
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function bookingById(id) {
+      return allBookings.find(b => b.id === id) || null;
+    }
+
+    function setEditMode(id) {
+      editingId = id;
+      document.getElementById("saveBtn").textContent = "Änderungen speichern";
+      document.getElementById("editHint").style.display = "inline";
+    }
+
+    function clearEditMode() {
+      editingId = null;
+      document.getElementById("saveBtn").textContent = "Buchung speichern";
+      document.getElementById("editHint").style.display = "none";
     }
 
     // =========================
@@ -343,17 +362,6 @@
     // =========================
     // Calendar
     // =========================
-    function toDatetimeLocal(dateObj) {
-      const pad = (n) => String(n).padStart(2, "0");
-      const d = new Date(dateObj);
-      const y = d.getFullYear();
-      const m = pad(d.getMonth() + 1);
-      const day = pad(d.getDate());
-      const h = pad(d.getHours());
-      const min = pad(d.getMinutes());
-      return `${y}-${m}-${day}T${h}:${min}`;
-    }
-
     function bookingsToEvents(bookings) {
       const docs = sortBookings(bookings);
       return docs.map(b => {
@@ -396,20 +404,23 @@
         allDaySlot: false,
         expandRows: true,
         locale: "de",
-        buttonText: {
-          today: "Heute",
-          month: "Monat",
-          week: "Woche",
-          day: "Tag"
-        },
+        buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
         headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
         selectable: true,
+
         select: (info) => {
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
         },
+
+        eventClick: (info) => {
+          const b = bookingById(info.event.id);
+          if (!b) return;
+          openModalForBooking(b);
+        },
+
         windowResize: () => setCalendarToolbarForWidth()
       });
 
@@ -476,10 +487,84 @@
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
     // =========================
+    // Modal (Details + Privat: edit/delete)
+    // =========================
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalClose = document.getElementById("modalClose");
+    const modalEdit = document.getElementById("modalEdit");
+    const modalDelete = document.getElementById("modalDelete");
+
+    let modalBookingId = null;
+
+    function openModalForBooking(b) {
+      modalBookingId = b.id;
+
+      document.getElementById("mCar").textContent = b.car || "";
+      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
+      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
+      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
+
+      const isPrivat = b.type === "privat";
+      modalEdit.style.display = isPrivat ? "inline-block" : "none";
+      modalDelete.style.display = isPrivat ? "inline-block" : "none";
+
+      modalOverlay.style.display = "flex";
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      modalBookingId = null;
+    }
+
+    modalClose.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    modalEdit.addEventListener("click", () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      // Prefill form
+      document.getElementById("car").value = b.car;
+      document.getElementById("name").value = (b.name || "").trim();
+      document.getElementById("start").value = b.start;
+      document.getElementById("end").value = b.end;
+
+      setEditMode(b.id);
+      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
+
+      closeModal();
+    });
+
+    modalDelete.addEventListener("click", async () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      const ok = confirm("Privatbuchung wirklich löschen?");
+      if (!ok) return;
+
+      try {
+        await db.collection("bookings").doc(b.id).delete();
+        if (editingId === b.id) {
+          document.getElementById("bookingForm").reset();
+          clearEditMode();
+        }
+        setMsg("✅ Privatbuchung gelöscht", "ok");
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
+      } finally {
+        closeModal();
+      }
+    });
+
+    // =========================
     // Form: Reset + Submit (Privat only)
     // =========================
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("bookingForm").reset();
+      clearEditMode();
       setMsg("", "");
     });
 
@@ -496,8 +581,10 @@
       if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
       if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
 
+      // Konfliktprüfung gegen alles (inkl. Domizil) für dieses Auto
+      // Beim Bearbeiten: eigenen Termin ignorieren
       const conflicts = allBookings
-        .filter(b => b.car === car)
+        .filter(b => b.car === car && b.id !== editingId)
         .some(b => overlaps(start, end, b.start, b.end));
 
       if (conflicts) {
@@ -505,18 +592,29 @@
       }
 
       try {
-        await db.collection("bookings").add({
-          car,
-          name,
-          start,
-          end,
-          type: "privat",
-          createdAt: new Date().toISOString()
-        });
+        if (editingId) {
+          // Update existing privat booking
+          await db.collection("bookings").doc(editingId).set({
+            car, name, start, end,
+            type: "privat",
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
 
-        setMsg("✅ Privatbuchung gespeichert", "ok");
+          setMsg("✅ Privatbuchung aktualisiert", "ok");
+          clearEditMode();
+        } else {
+          // Create new privat booking
+          await db.collection("bookings").add({
+            car, name, start, end,
+            type: "privat",
+            createdAt: new Date().toISOString()
+          });
+          setMsg("✅ Privatbuchung gespeichert", "ok");
+        }
+
         e.target.reset();
         setFilter(car);
+
       } catch (err) {
         console.error(err);
         setMsg("❌ Fehler beim Speichern (Details in der Konsole)", "err");
@@ -536,7 +634,7 @@
       }, (err) => {
         console.error(err);
         document.getElementById("bookings").innerHTML =
-          `<div class="danger">Fehler beim Laden. (Console prüfen)</div>`;
+          `<div class="dangerText">Fehler beim Laden. (Console prüfen)</div>`;
       });
     }
 
