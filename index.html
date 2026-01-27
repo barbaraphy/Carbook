@@ -442,21 +442,28 @@
         },
 
         // Im Monatskalender: Tag antippen -> Standardzeit setzen (08:00–09:00)
-        dateClick: (info) => {
-          if (calendar.view.type !== "dayGridMonth") return;
+       dateClick: (info) => {
+  const carSel = document.getElementById("car");
+  if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
 
-          const carSel = document.getElementById("car");
-          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
+  const start = new Date(info.date);
+  const end   = new Date(info.date);
 
-          const start = new Date(info.date);
-          start.setHours(8,0,0,0);
-          const end = new Date(info.date);
-          end.setHours(9,0,0,0);
+  // sinnvoller Default je nach View
+  if (calendar.view.type === "dayGridMonth") {
+    start.setHours(8,0,0,0);
+    end.setHours(9,0,0,0);
+  } else {
+    // Woche / Tag: kleine Buchung
+    end.setMinutes(end.getMinutes() + 30);
+  }
 
-          document.getElementById("start").value = toDatetimeLocal(start);
-          document.getElementById("end").value = toDatetimeLocal(end);
-          setMsg("Tipp: Zeiten wurden auf 08:00–09:00 gesetzt (anpassen möglich).", "ok");
-        },
+  document.getElementById("start").value = toDatetimeLocal(start);
+  document.getElementById("end").value   = toDatetimeLocal(end);
+
+  setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
+},
+
 
         eventClick: (info) => {
           const b = bookingById(info.event.id);
