@@ -90,34 +90,56 @@
   const db = firebase.firestore();
 </script>
 
-    <button id="testBooking" style="
-  margin-top:20px;
-  padding:12px 18px;
-  font-size:16px;
-  border:none;
-  border-radius:6px;
-  background:#16a34a;
-  color:white;
-  cursor:pointer;
-">
-  Testbuchung speichern
-</button>
+     <button id="testBooking" style="
+      margin-top:20px;
+      padding:12px 18px;
+      font-size:16px;
+      border:none;
+      border-radius:6px;
+      background:#16a34a;
+      color:white;
+      cursor:pointer;
+    ">
+      Testbuchung speichern
+    </button>
 
-<script>
-  document.getElementById("testBooking").addEventListener("click", async () => {
-    try {
-      await db.collection("bookings").add({
-        car: "Auto 1",
-        name: "Web-Test",
-        start: new Date().toISOString(),
-        end: new Date().toISOString(),
-        type: "test"
-      });
-      alert("✅ Buchung erfolgreich gespeichert");
-    } catch (e) {
-      alert("❌ Fehler beim Speichern");
-      console.error(e);
-    }
-  });
-</script>
-    
+    <div class="hint">
+      Hinweis: Diese Testfunktion speichert einen Eintrag in Firestore.
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
+      authDomain: "autoplan-6b642.firebaseapp.com",
+      projectId: "autoplan-6b642",
+      storageBucket: "autoplan-6b642.firebasestorage.app",
+      messagingSenderId: "667091765339",
+      appId: "1:667091765339:web:fea7cb7cb5391b5c85177e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("testBooking").addEventListener("click", async () => {
+      try {
+        await db.collection("bookings").add({
+          car: "Auto 1",
+          name: "Web-Test",
+          start: new Date().toISOString(),
+          end: new Date().toISOString(),
+          type: "test"
+        });
+        alert("✅ Buchung erfolgreich gespeichert");
+      } catch (e) {
+        alert("❌ Fehler beim Speichern (Details in der Konsole)");
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
