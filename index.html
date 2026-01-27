@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoPlan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f6f8;
+      margin: 0;
+      padding: 40px 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    p {
+      line-height: 1.6;
+    }
+    .cars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+    a.car {
+      display: block;
+      padding: 18px;
+      text-align: center;
+      text-decoration: none;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    a.car:hover {
+      background: #1e40af;
+    }
+    .hint {
+      margin-top: 25px;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AutoPlan</h1>
+    <p>
+      AutoPlan ist die interne Buchungsübersicht für unsere Praxisfahrzeuge.
+      Bitte trage Fahrten für Domizilbehandlungen oder private Nutzung selbstständig ein.
+    </p>
+
+    <div class="cars">
+      <a class="car" href="#" target="_blank">🚗 Auto 1</a>
+      <a class="car" href="#" target="_blank">🚗 Auto 2</a>
+      <a class="car" href="#" target="_blank">🚗 Auto 3</a>
+      <a class="car" href="#" target="_b_
