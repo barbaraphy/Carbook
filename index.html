@@ -503,7 +503,7 @@
 
           document.getElementById("start").value = toDatetimeLocal(start);
           document.getElementById("end").value   = toDatetimeLocal(end);
-          setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
+          setMsg("✅ Zeit übernommen – du kannst sie oben anpassen.", "ok");
         },
 
         select: (info) => {
@@ -511,7 +511,7 @@
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
-          setMsg("✅ Zeitraum übernommen – du kannst ihn unten anpassen.", "ok");
+          setMsg("✅ Zeitraum übernommen – du kannst ihn oben anpassen.", "ok");
         },
 
         eventClick: (info) => {
