@@ -672,3 +672,13 @@
   </script>
 </body>
 </html>
+
+/* Mobile: Touch/Click im Kalender erlauben */
+#calendarWrap, #calendar, .fc {
+  pointer-events: auto;
+}
+
+.fc .fc-scroller {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
