@@ -88,9 +88,10 @@
     .btn.primary:hover { background:#15803d; }
     .btn.active { outline: 3px solid rgba(17,24,39,.15); }
 
+    /* Robust responsive layout */
     .layout {
       display:grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
       gap: 16px;
       align-items:start;
     }
@@ -142,7 +143,7 @@
     #calendarWrap { display:none; }
     #calendar { border: 1px solid #eee; border-radius: 10px; padding: 10px; }
 
-    @media (max-width: 980px) {
+    @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
     }
   </style>
@@ -171,9 +172,9 @@
 
     <div class="viewToggle">
       <button class="btn active" id="showList">Liste</button>
-<button class="btn" id="showWeek">Kalender (Woche)</button>
-<button class="btn" id="showMonth">Kalender (Monat)</button>
-<span class="pill" id="statusPill">Filter: Alle Autos</span>
+      <button class="btn" id="showWeek">Kalender (Woche)</button>
+      <button class="btn" id="showMonth">Kalender (Monat)</button>
+      <span class="pill" id="statusPill">Filter: Alle Autos</span>
     </div>
 
     <div class="layout">
@@ -218,7 +219,7 @@
 
         <hr class="hr" />
         <div class="small">
-          Tipp: Im Kalender kannst du in ein freies Zeitfenster klicken – Start/Ende werden dann vorgefüllt.
+          Tipp: Im Kalender kannst du ein Zeitfenster markieren – Start/Ende werden dann vorgefüllt.
         </div>
       </div>
 
@@ -284,7 +285,6 @@
 
     function fmtLocal(dtStr) {
       if (!dtStr) return "";
-      // dtStr may be "YYYY-MM-DDTHH:MM" or ISO; keep human readable
       return dtStr.replace("T", " ").slice(0, 16);
     }
 
@@ -302,7 +302,7 @@
     }
 
     function sortBookings(arr) {
-      return arr.sort((x, y) => (x.start || "").localeCompare(y.start || ""));
+      return arr.slice().sort((x, y) => (x.start || "").localeCompare(y.start || ""));
     }
 
     // =========================
@@ -341,15 +341,24 @@
     }
 
     // =========================
-    // Render: Calendar
+    // Calendar
     // =========================
+    function toDatetimeLocal(dateObj) {
+      const pad = (n) => String(n).padStart(2, "0");
+      const d = new Date(dateObj);
+      const y = d.getFullYear();
+      const m = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const h = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${y}-${m}-${day}T${h}:${min}`;
+    }
+
     function bookingsToEvents(bookings) {
-      const docs = sortBookings(bookings.slice());
+      const docs = sortBookings(bookings);
       return docs.map(b => {
         const isDomizil = b.type === "domizil";
         const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
-
-        // Im Kalender direkt sichtbar: "Auto X – Vorname"
         const who = (b.name || "").trim() || (isDomizil ? "Domizil" : "Privat");
         const title = `${b.car} – ${who}`;
 
@@ -364,6 +373,15 @@
       });
     }
 
+    function setCalendarToolbarForWidth() {
+      if (!calendar) return;
+      const isSmall = window.innerWidth < 600;
+      calendar.setOption("headerToolbar", isSmall
+        ? { left: "prev,next", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
+        : { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
+      );
+    }
+
     function ensureCalendar() {
       if (calendar) return;
 
@@ -372,29 +390,31 @@
         initialView: "timeGridWeek",
         height: "auto",
         nowIndicator: true,
-        firstDay: 1, // Monday
+        firstDay: 1,
         slotMinTime: "06:00:00",
         slotMaxTime: "21:00:00",
         allDaySlot: false,
         expandRows: true,
         locale: "de",
-        headerToolbar: {
-          left: "prev,next today",
-          center: "title",
-          right: "timeGridMonth,timeGridWeek,timeGridDay"
+        buttonText: {
+          today: "Heute",
+          month: "Monat",
+          week: "Woche",
+          day: "Tag"
         },
+        headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
         selectable: true,
         select: (info) => {
-          // Prefill form with selected slot
           const carSel = document.getElementById("car");
           if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
-
           document.getElementById("start").value = toDatetimeLocal(info.start);
           document.getElementById("end").value = toDatetimeLocal(info.end);
-        }
+        },
+        windowResize: () => setCalendarToolbarForWidth()
       });
 
       calendar.render();
+      setCalendarToolbarForWidth();
     }
 
     function renderCalendar() {
@@ -404,20 +424,8 @@
       calendar.addEventSource(events);
     }
 
-    function toDatetimeLocal(dateObj) {
-      // Returns YYYY-MM-DDTHH:MM in local time
-      const pad = (n) => String(n).padStart(2, "0");
-      const d = new Date(dateObj);
-      const y = d.getFullYear();
-      const m = pad(d.getMonth() + 1);
-      const day = pad(d.getDate());
-      const h = pad(d.getHours());
-      const min = pad(d.getMinutes());
-      return `${y}-${m}-${day}T${h}:${min}`;
-    }
-
     // =========================
-    // UI: Filter buttons
+    // Filter
     // =========================
     function setFilter(newFilter) {
       activeCarFilter = newFilter;
@@ -440,25 +448,32 @@
     });
 
     // =========================
-    // UI: Toggle views
+    // View toggle (Liste / Woche / Monat)
     // =========================
     function showListView() {
       document.getElementById("listWrap").style.display = "block";
       document.getElementById("calendarWrap").style.display = "none";
       document.getElementById("showList").classList.add("active");
-      document.getElementById("showCalendar").classList.remove("active");
+      document.getElementById("showWeek").classList.remove("active");
+      document.getElementById("showMonth").classList.remove("active");
     }
 
-    function showCalendarView() {
+    function showCalendarView(viewName) {
       document.getElementById("listWrap").style.display = "none";
       document.getElementById("calendarWrap").style.display = "block";
-      document.getElementById("showCalendar").classList.add("active");
       document.getElementById("showList").classList.remove("active");
+      document.getElementById("showWeek").classList.toggle("active", viewName === "timeGridWeek");
+      document.getElementById("showMonth").classList.toggle("active", viewName === "dayGridMonth");
+
+      ensureCalendar();
+      calendar.changeView(viewName);
+      setCalendarToolbarForWidth();
       renderCalendar();
     }
 
     document.getElementById("showList").addEventListener("click", showListView);
-    function showListView() {   document.getElementById("listWrap").style.display = "block";   document.getElementById("calendarWrap").style.display = "none";   document.getElementById("showList").classList.add("active");   document.getElementById("showWeek").classList.remove("active");   document.getElementById("showMonth").classList.remove("active"); }  function showCalendarView(viewName) {   document.getElementById("listWrap").style.display = "none";   document.getElementById("calendarWrap").style.display = "block";   document.getElementById("showList").classList.remove("active");   document.getElementById("showWeek").classList.toggle("active", viewName === "timeGridWeek");   document.getElementById("showMonth").classList.toggle("active", viewName === "dayGridMonth");    ensureCalendar();   calendar.changeView(viewName);   renderCalendar(); }  document.getElementById("showList").addEventListener("click", showListView); document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek")); document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
+    document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
+    document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
     // =========================
     // Form: Reset + Submit (Privat only)
@@ -481,7 +496,6 @@
       if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
       if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
 
-      // Konfliktprüfung gegen alles (inkl. Domizil) für dieses Auto
       const conflicts = allBookings
         .filter(b => b.car === car)
         .some(b => overlaps(start, end, b.start, b.end));
@@ -502,8 +516,6 @@
 
         setMsg("✅ Privatbuchung gespeichert", "ok");
         e.target.reset();
-
-        // Optional: nach Speichern direkt Filter auf dieses Auto setzen
         setFilter(car);
       } catch (err) {
         console.error(err);
@@ -512,7 +524,7 @@
     });
 
     // =========================
-    // Firestore: Live sync (ohne Index-Probleme)
+    // Firestore: Live sync
     // =========================
     function subscribeAll() {
       db.collection("bookings").onSnapshot((snap) => {
