@@ -11,668 +11,226 @@
   <style>
     body{
       font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:#f5f6f8; margin:0; padding:22px 14px; color:#222;
+      background:#f5f6f8; margin:0; padding:20px; color:#222;
     }
     .container{
-      max-width:1050px; margin:auto; background:#fff; padding:20px;
+      max-width:1100px; margin:auto; background:#fff; padding:20px;
       border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.08);
     }
+
     h1{ margin:0 0 6px 0; }
-    p{ margin:0 0 14px 0; color:#444; line-height:1.5; }
+    p{ margin:0 0 14px 0; color:#444; }
 
     .topbar{
-      display:flex; justify-content:space-between; align-items:flex-start;
-      gap:12px; flex-wrap:wrap; margin-bottom:10px;
+      display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+      margin-bottom:10px;
     }
     .pill{
       background:#f3f4f6; border-radius:999px; padding:6px 10px;
-      font-size:13px; color:#111; display:inline-flex; gap:8px; align-items:center;
+      font-size:13px; display:flex; gap:6px; align-items:center;
     }
-    .legend-dot{ width:10px; height:10px; border-radius:99px; display:inline-block; }
-    .dot-domizil{ background:#2563eb; }
-    .dot-privat{ background:#16a34a; }
+    .dot{ width:10px; height:10px; border-radius:50%; }
+    .dom{ background:#2563eb; }
+    .pri{ background:#16a34a; }
 
     .cars{
-      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:10px; margin:10px 0 16px 0;
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:10px; margin-bottom:14px;
     }
-    button.car{
-      padding:12px; border:none; background:#2563eb; color:#fff;
-      border-radius:8px; font-weight:700; cursor:pointer;
+    .car{
+      border:none; border-radius:8px; padding:10px;
+      background:#2563eb; color:#fff; font-weight:700; cursor:pointer;
     }
-    button.car:hover{ background:#1e40af; }
-    button.car.active{ outline:3px solid rgba(37,99,235,.35); }
+    .car.active{ outline:3px solid rgba(37,99,235,.4); }
 
-    .viewToggle{
-      display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0 14px 0;
-    }
+    .viewToggle{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
     .btn{
-      border:none; border-radius:8px; padding:10px 12px; font-weight:600;
-      cursor:pointer; background:#e5e7eb; color:#111;
+      border:none; border-radius:8px; padding:8px 12px;
+      background:#e5e7eb; cursor:pointer; font-weight:600;
     }
-    .btn:hover{ background:#d1d5db; }
     .btn.primary{ background:#16a34a; color:#fff; }
-    .btn.primary:hover{ background:#15803d; }
     .btn.danger{ background:#dc2626; color:#fff; }
-    .btn.danger:hover{ background:#b91c1c; }
-    .btn.active{ outline:3px solid rgba(17,24,39,.15); }
+    .btn.active{ outline:3px solid rgba(0,0,0,.15); }
 
-    /* ===== Layout ===== */
     .layout{
-      display:grid;
-      gap:16px;
-      align-items:start;
-      grid-template-columns: 340px minmax(0, 1fr);
+      display:grid; gap:16px;
+      grid-template-columns: 360px minmax(0,1fr);
     }
-    .layout > *{ min-width:0; }
-    @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
-    @media (min-width: 1200px){ .layout{ grid-template-columns: 380px minmax(0, 1fr); } }
+    @media (max-width: 900px){
+      .layout{ grid-template-columns:1fr; }
+    }
 
     .card{
-      border:1px solid #eee; border-radius:10px; padding:14px; background:#fff;
-      overflow:hidden;
+      border:1px solid #eee; border-radius:10px;
+      padding:14px; background:#fff;
     }
 
     form{ display:grid; gap:10px; }
-    label{ display:block; font-size:14px; color:#333; }
+    label{ font-size:14px; }
     input,select{
-      width:100%; padding:10px; border:1px solid #d6d6d6; border-radius:8px;
-      font-size:14px; box-sizing:border-box;
+      width:100%; padding:10px; border:1px solid #ccc;
+      border-radius:8px; font-size:14px;
     }
 
-    /* Standard: Start/Ende nebeneinander */
     .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    /* Desktop nebeneinander: Start/Ende untereinander */
-    @media (min-width: 981px){ .row2{ grid-template-columns: 1fr; } }
+    @media (min-width: 901px){
+      .row2{ grid-template-columns:1fr; }
+    }
 
-    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:2px; }
-    .msg{ margin-top:6px; font-size:14px; }
+    .msg{ font-size:14px; margin-top:6px; }
     .msg.ok{ color:#15803d; }
     .msg.err{ color:#b91c1c; }
-    .small{ font-size:13px; color:#555; line-height:1.35; }
-    .hr{ border:none; border-top:1px solid #eee; margin:12px 0; }
 
-    /* List */
     .list{ display:grid; gap:10px; }
     .item{
-      border:1px solid #eee; border-radius:10px; padding:12px;
-      display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff;
-      cursor:pointer;
+      border:1px solid #eee; border-radius:10px;
+      padding:12px; cursor:pointer;
     }
     .item:hover{ background:#f9fafb; }
-    .item strong{ display:block; }
-    .meta{ color:#444; font-size:14px; }
-    .small2{ color:#666; font-size:13px; }
-    .dangerText{ color:#b91c1c; font-weight:700; }
 
-    /* Calendar */
-    #calendarWrap{ display:none; position:relative; }
-    #calendar{
-      border:1px solid #eee; border-radius:10px; padding:10px;
-      width:100%;
-      box-sizing:border-box;
-      overflow:hidden;
-      position:relative;
-    }
-    .fc{ max-width:100%; position:relative; }
-    .fc .fc-view-harness{ overflow:hidden; border-radius:10px; }
+    #calendarWrap{ display:none; }
 
-    /* Titel (Datum oben) */
+    /* FullCalendar tweaks */
     .fc .fc-toolbar-title{
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-      font-size: 1.05rem;
-      line-height: 1.15;
+      font-size:1rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
-
-    /* Toolbar nicht umbrechen lassen (Laptop/ Desktop) */
-    .fc .fc-toolbar{
-      flex-wrap: nowrap;
-      gap: 6px;
-    }
-    .fc .fc-button{
-      padding: .32em .55em;
-      font-size: 0.92em;
-    }
-
-    /* Handy: kleinere Titel + Buttons + Headerhöhen */
-    @media (max-width: 600px){
-      .fc .fc-toolbar{ flex-wrap: nowrap; gap:6px; }
-      .fc .fc-toolbar-title{ font-size:0.85rem; line-height:1.15; }
-      .fc .fc-button{ padding:.30em .48em; font-size:0.88em; }
-
-      /* Datum/Day Header kleiner => weniger Überlappung */
-      .fc .fc-col-header-cell-cushion{ font-size:0.78em; padding:2px 0; }
-      .fc .fc-daygrid-day-number{ font-size:0.8em; padding:2px; }
-
-      /* Handy: Drag in Woche/Tag erlauben */
-      .fc .fc-timegrid-body,
-      .fc .fc-timegrid-slots,
-      .fc .fc-scroller-harness,
-      .fc .fc-scroller{
-        touch-action: none;
-        -webkit-overflow-scrolling: touch;
-      }
+    @media (max-width:600px){
+      .fc .fc-toolbar-title{ font-size:.85rem; }
+      .fc .fc-button{ font-size:.85rem; padding:.3em .45em; }
+      .fc .fc-col-header-cell-cushion{ font-size:.75rem; }
+      .fc .fc-daygrid-day-number{ font-size:.75rem; }
     }
 
     /* Modal */
     .modalOverlay{
       position:fixed; inset:0; background:rgba(0,0,0,.45);
-      display:none; align-items:center; justify-content:center; padding:16px;
-      z-index:9999;
+      display:none; align-items:center; justify-content:center;
     }
     .modal{
-      width:min(560px, 100%); background:#fff; border-radius:12px;
-      box-shadow:0 20px 60px rgba(0,0,0,.25); padding:16px;
+      background:#fff; border-radius:12px;
+      padding:16px; width:min(500px,95%);
     }
-    .modal h3{ margin:0 0 10px 0; }
-    .modal .row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-top:12px; }
-    .kv{ display:grid; grid-template-columns: 140px 1fr; gap:8px 12px; }
-    .kv div{ font-size:14px; }
-    .kv .k{ color:#555; }
-    .kv .v{ color:#111; font-weight:600; }
+    .modal .row{ display:flex; gap:10px; justify-content:flex-end; }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="topbar">
-      <div>
-        <h1>AutoPlan</h1>
-        <p>Privatbuchungen erfassen. Domiziltermine sind als <b>Fixtermine</b> (blau) hinterlegt und blockieren automatisch.</p>
-      </div>
-      <div class="pill" title="Farblegende">
-        <span class="legend-dot dot-domizil"></span> Domizil
-        <span class="legend-dot dot-privat" style="margin-left:6px;"></span> Privat
-      </div>
+<div class="container">
+  <div class="topbar">
+    <div>
+      <h1>AutoPlan</h1>
+      <p>Privatbuchungen erfassen – Domizil (blau) blockiert automatisch.</p>
     </div>
-
-    <div class="cars">
-      <button class="car active" data-car="ALL">Alle</button>
-      <button class="car" data-car="Auto 1">🚗 Auto 1</button>
-      <button class="car" data-car="Auto 2">🚗 Auto 2</button>
-      <button class="car" data-car="Auto 3">🚗 Auto 3</button>
-      <button class="car" data-car="Auto 4">🚗 Auto 4</button>
-    </div>
-
-    <div class="viewToggle">
-      <button class="btn active" id="showList">Liste</button>
-      <button class="btn" id="showWeek">Kalender (Woche)</button>
-      <button class="btn" id="showMonth">Kalender (Monat)</button>
-      <span class="pill" id="statusPill">Filter: Alle Autos</span>
-    </div>
-
-    <div class="layout">
-      <!-- Left -->
-      <div class="card">
-        <h2 style="margin:0 0 10px 0;">Privat buchen</h2>
-
-        <form id="bookingForm">
-          <div>
-            <label for="car">Auto</label>
-            <select id="car" required>
-              <option value="Auto 1">Auto 1</option>
-              <option value="Auto 2">Auto 2</option>
-              <option value="Auto 3">Auto 3</option>
-              <option value="Auto 4">Auto 4</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="name">Vorname</label>
-            <input id="name" required placeholder="z.B. Anna" />
-          </div>
-
-          <div class="row2">
-            <div>
-              <label for="start">Start</label>
-              <input id="start" type="datetime-local" required />
-            </div>
-            <div>
-              <label for="end">Ende</label>
-              <input id="end" type="datetime-local" required />
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="btn primary" type="submit" id="saveBtn">Buchung speichern</button>
-            <button class="btn" type="button" id="resetBtn">Zurücksetzen</button>
-            <span class="small" id="editHint" style="display:none;">Bearbeitungsmodus aktiv</span>
-          </div>
-        </form>
-
-        <div id="msg" class="msg"></div>
-
-        <hr class="hr" />
-        <div class="small">
-          Handy: Wochen-/Tagansicht: <b>lange drücken + ziehen</b>. Monat: <b>Tag antippen</b>.
-          <br/>Termine antippen → Details (Privat: bearbeiten/löschen). Liste ist ebenfalls antippbar.
-        </div>
-      </div>
-
-      <!-- Right -->
-      <div class="card">
-        <div id="listWrap">
-          <h2 style="margin:0 0 10px 0;">Buchungsübersicht</h2>
-          <div id="bookings" class="list"><em class="small2">Lade Buchungen …</em></div>
-        </div>
-
-        <div id="calendarWrap">
-          <h2 style="margin:0 0 10px 0;">Kalenderansicht</h2>
-          <div id="calendar"></div>
-          <div class="small" style="margin-top:10px;"></div>
-        </div>
-      </div>
+    <div class="pill">
+      <span class="dot dom"></span> Domizil
+      <span class="dot pri"></span> Privat
     </div>
   </div>
 
-  <!-- Modal -->
-  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
-    <div class="modal">
-      <h3 id="modalTitle">Termin</h3>
-      <div class="kv">
-        <div class="k">Auto</div><div class="v" id="mCar"></div>
-        <div class="k">Art</div><div class="v" id="mType"></div>
-        <div class="k">Name</div><div class="v" id="mName"></div>
-        <div class="k">Zeit</div><div class="v" id="mTime"></div>
+  <div class="cars">
+    <button class="car active" data-car="ALL">Alle</button>
+    <button class="car" data-car="Auto 1">Auto 1</button>
+    <button class="car" data-car="Auto 2">Auto 2</button>
+    <button class="car" data-car="Auto 3">Auto 3</button>
+    <button class="car" data-car="Auto 4">Auto 4</button>
+  </div>
+
+  <div class="viewToggle">
+    <button class="btn active" id="showList">Liste</button>
+    <button class="btn" id="showWeek">Woche</button>
+    <button class="btn" id="showMonth">Monat</button>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <h2>Privat buchen</h2>
+      <form id="bookingForm">
+        <select id="car">
+          <option>Auto 1</option><option>Auto 2</option>
+          <option>Auto 3</option><option>Auto 4</option>
+        </select>
+        <input id="name" placeholder="Vorname" required>
+        <div class="row2">
+          <input id="start" type="datetime-local" required>
+          <input id="end" type="datetime-local" required>
+        </div>
+        <button class="btn primary">Speichern</button>
+      </form>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <div id="listWrap">
+        <h2>Buchungsübersicht</h2>
+        <div id="bookings" class="list"></div>
       </div>
-      <div class="row">
-        <button class="btn" id="modalClose">Schliessen</button>
-        <button class="btn" id="modalEdit" style="display:none;">Bearbeiten</button>
-        <button class="btn danger" id="modalDelete" style="display:none;">Löschen</button>
+      <div id="calendarWrap">
+        <div id="calendar"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-  <!-- FullCalendar -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
-      authDomain: "autoplan-6b642.firebaseapp.com",
-      projectId: "autoplan-6b642",
-      storageBucket: "autoplan-6b642.firebasestorage.app",
-      messagingSenderId: "667091765339",
-      appId: "1:667091765339:web:fea7cb7cb5391b5c85177e"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let activeCarFilter = "ALL";
-    let allBookings = [];
-    let calendar = null;
-    let editingId = null;
-    let currentCalendarView = "timeGridWeek";
-
-    const COLOR_DOMIZIL = "#2563eb";
-    const COLOR_PRIVAT  = "#16a34a";
-
-    function setMsg(text, kind) {
-      const el = document.getElementById("msg");
-      el.textContent = text || "";
-      el.className = "msg " + (kind || "");
-    }
-    function fmtLocal(dtStr) {
-      if (!dtStr) return "";
-      return dtStr.replace("T", " ").slice(0, 16);
-    }
-    function overlaps(aStart, aEnd, bStart, bEnd) {
-      const as = new Date(aStart), ae = new Date(aEnd);
-      const bs = new Date(bStart), be = new Date(bEnd);
-      return as < be && ae > bs;
-    }
-    function filteredBookings() {
-      if (activeCarFilter === "ALL") return allBookings.slice();
-      return allBookings.filter(b => b.car === activeCarFilter);
-    }
-    function sortBookings(arr) {
-      return arr.slice().sort((x, y) => (x.start || "").localeCompare(y.start || ""));
-    }
-    function toDatetimeLocal(dateObj) {
-      const pad = (n) => String(n).padStart(2, "0");
-      const d = new Date(dateObj);
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-    function bookingById(id) {
-      return allBookings.find(b => b.id === id) || null;
-    }
-    function setEditMode(id) {
-      editingId = id;
-      document.getElementById("saveBtn").textContent = "Änderungen speichern";
-      document.getElementById("editHint").style.display = "inline";
-    }
-    function clearEditMode() {
-      editingId = null;
-      document.getElementById("saveBtn").textContent = "Buchung speichern";
-      document.getElementById("editHint").style.display = "none";
-    }
-
-    // ===== LIST RENDER (klickbar -> Modal) =====
-    function renderList() {
-      const wrap = document.getElementById("bookings");
-      const docs = sortBookings(filteredBookings());
-
-      wrap.innerHTML = "";
-      if (!docs.length) {
-        div.innerHTML = `
-  <div>
-    <strong>${b.car} — ${isDomizil ? "Domizil" : "Privat"}</strong>
-    <div class="meta">${fmtLocal(b.start)} → ${fmtLocal(b.end)}</div>
-    <div class="small2">${(b.name || "").trim()}</div>
+<!-- Modal -->
+<div class="modalOverlay" id="modal">
+  <div class="modal">
+    <h3 id="mTitle"></h3>
+    <p id="mTime"></p>
+    <div class="row">
+      <button class="btn" onclick="closeModal()">Schliessen</button>
+    </div>
   </div>
-`;
+</div>
 
-        return;
-      }
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-      docs.forEach((b) => {
-        const div = document.createElement("div");
-        div.className = "item";
+<script>
+  firebase.initializeApp({
+    apiKey:"AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
+    authDomain:"autoplan-6b642.firebaseapp.com",
+    projectId:"autoplan-6b642"
+  });
+  const db = firebase.firestore();
 
-        const isDomizil = b.type === "domizil";
-        const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
-        div.style.borderLeft = `6px solid ${color}`;
+  let bookings=[];
 
-        div.innerHTML = `
-          <div>
-            <strong>${b.car} — ${isDomizil ? "Domizil" : "Privat"}</strong>
-            <div class="meta">${fmtLocal(b.start)} → ${fmtLocal(b.end)}</div>
-            <div class="small2">${(b.name || "").trim()}</div>
-          </div>
-          <div class="small2"><span class="pill">${b.id.slice(0,6)}…</span></div>
-        `;
-
-        // ✅ Klick auf Liste öffnet Modal
-        div.addEventListener("click", () => openModalForBooking(b));
-
-        wrap.appendChild(div);
-      });
-    }
-
-    function bookingsToEvents(bookings) {
-      const docs = sortBookings(bookings);
-      return docs.map(b => {
-        const isDomizil = b.type === "domizil";
-        const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
-        const who = (b.name || "").trim() || (isDomizil ? "Domizil" : "Privat");
-        return {
-          id: b.id,
-          title: `${b.car} – ${who}`,
-          start: b.start,
-          end: b.end,
-          backgroundColor: color,
-          borderColor: color
-        };
-      });
-    }
-
-    // Toolbar: "Heute" auch auf Handy behalten
-    function setCalendarToolbarForWidth() {
-      if (!calendar) return;
-      calendar.setOption("headerToolbar",
-        { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
-      );
-    }
-
-    // ===== MODAL =====
-    const modalOverlay = document.getElementById("modalOverlay");
-    const modalClose = document.getElementById("modalClose");
-    const modalEdit = document.getElementById("modalEdit");
-    const modalDelete = document.getElementById("modalDelete");
-    let modalBookingId = null;
-
-    function openModalForBooking(b) {
-      modalBookingId = b.id;
-      document.getElementById("mCar").textContent = b.car || "";
-      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
-      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
-      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
-
-      const isPrivat = b.type === "privat";
-      modalEdit.style.display = isPrivat ? "inline-block" : "none";
-      modalDelete.style.display = isPrivat ? "inline-block" : "none";
-
-      modalOverlay.style.display = "flex";
-    }
-    function closeModal() {
-      modalOverlay.style.display = "none";
-      modalBookingId = null;
-    }
-    modalClose.addEventListener("click", closeModal);
-    modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
-
-    modalEdit.addEventListener("click", () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-
-      document.getElementById("car").value = b.car;
-      document.getElementById("name").value = (b.name || "").trim();
-      document.getElementById("start").value = b.start;
-      document.getElementById("end").value = b.end;
-
-      setEditMode(b.id);
-      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
-      closeModal();
+  function renderList(){
+    const el=document.getElementById("bookings");
+    el.innerHTML="";
+    bookings.forEach(b=>{
+      const d=document.createElement("div");
+      d.className="item";
+      d.style.borderLeft=`6px solid ${b.type==="domizil"?"#2563eb":"#16a34a"}`;
+      d.innerHTML=`
+        <strong>${b.car} – ${b.type==="domizil"?"Domizil":"Privat"}</strong>
+        <div>${b.start.replace("T"," ")} → ${b.end.replace("T"," ")}</div>
+        <div>${b.name||""}</div>`;
+      d.onclick=()=>openModal(b);
+      el.appendChild(d);
     });
+  }
 
-    modalDelete.addEventListener("click", async () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-      if (!confirm("Privatbuchung wirklich löschen?")) return;
+  function openModal(b){
+    document.getElementById("mTitle").textContent =
+      `${b.car} – ${b.type==="domizil"?"Domizil":"Privat"}`;
+    document.getElementById("mTime").textContent =
+      `${b.start.replace("T"," ")} → ${b.end.replace("T"," ")}`;
+    document.getElementById("modal").style.display="flex";
+  }
+  function closeModal(){
+    document.getElementById("modal").style.display="none";
+  }
 
-      try {
-        await db.collection("bookings").doc(b.id).delete();
-        if (editingId === b.id) {
-          document.getElementById("bookingForm").reset();
-          clearEditMode();
-        }
-        setMsg("✅ Privatbuchung gelöscht", "ok");
-      } catch (err) {
-        console.error(err);
-        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
-      } finally {
-        closeModal();
-      }
-    });
-
-    // ===== CALENDAR =====
-    function ensureCalendar() {
-      if (calendar) return;
-
-      const calEl = document.getElementById("calendar");
-      calendar = new FullCalendar.Calendar(calEl, {
-        initialView: currentCalendarView,
-        height: "auto",
-        nowIndicator: true,
-        firstDay: 1,
-        slotMinTime: "06:00:00",
-        slotMaxTime: "21:00:00",
-        allDaySlot: false,
-        expandRows: true,
-
-        locale: "de",
-        buttonText: { today: "Heute", month: "Monat", week: "Woche", day: "Tag" },
-        headerToolbar: { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" },
-        titleFormat: { year: "numeric", month: "short", day: "numeric" },
-
-        selectable: true,
-        selectMirror: true,
-        longPressDelay: 150,
-        selectLongPressDelay: 150,
-        eventLongPressDelay: 150,
-        selectMinDistance: 0,
-
-        dateClick: (info) => {
-          const carSel = document.getElementById("car");
-          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
-
-          const start = new Date(info.date);
-          const end   = new Date(info.date);
-
-          if (calendar.view.type === "dayGridMonth") {
-            start.setHours(8,0,0,0);
-            end.setHours(9,0,0,0);
-          } else {
-            end.setMinutes(end.getMinutes() + 30);
-          }
-
-          document.getElementById("start").value = toDatetimeLocal(start);
-          document.getElementById("end").value   = toDatetimeLocal(end);
-          setMsg("✅ Zeit übernommen – du kannst sie unten anpassen.", "ok");
-        },
-
-        select: (info) => {
-          const carSel = document.getElementById("car");
-          if (activeCarFilter !== "ALL") carSel.value = activeCarFilter;
-          document.getElementById("start").value = toDatetimeLocal(info.start);
-          document.getElementById("end").value = toDatetimeLocal(info.end);
-          setMsg("✅ Zeitraum übernommen – du kannst ihn unten anpassen.", "ok");
-        },
-
-        eventClick: (info) => {
-          const b = bookingById(info.event.id);
-          if (!b) return;
-          openModalForBooking(b);
-        },
-
-        windowResize: () => setCalendarToolbarForWidth()
-      });
-
-      calendar.render();
-      setCalendarToolbarForWidth();
-    }
-
-    function renderCalendar() {
-      ensureCalendar();
-      const events = bookingsToEvents(filteredBookings());
-      calendar.removeAllEvents();
-      calendar.addEventSource(events);
-    }
-
-    // ===== FILTER =====
-    function setFilter(newFilter) {
-      activeCarFilter = newFilter;
-      document.querySelectorAll("button.car").forEach(b => {
-        b.classList.toggle("active", b.dataset.car === newFilter);
-      });
-
-      const pill = document.getElementById("statusPill");
-      pill.textContent = (newFilter === "ALL") ? "Filter: Alle Autos" : `Filter: ${newFilter}`;
-
-      renderList();
-      if (document.getElementById("calendarWrap").style.display !== "none") renderCalendar();
-    }
-
-    document.querySelectorAll("button.car").forEach(btn => {
-      btn.addEventListener("click", () => setFilter(btn.dataset.car));
-    });
-
-    // ===== VIEW TOGGLE =====
-    function showListView() {
-      document.getElementById("listWrap").style.display = "block";
-      document.getElementById("calendarWrap").style.display = "none";
-      document.getElementById("showList").classList.add("active");
-      document.getElementById("showWeek").classList.remove("active");
-      document.getElementById("showMonth").classList.remove("active");
-    }
-
-    function showCalendarView(viewName) {
-      currentCalendarView = viewName;
-
-      document.getElementById("listWrap").style.display = "none";
-      document.getElementById("calendarWrap").style.display = "block";
-      document.getElementById("showList").classList.remove("active");
-      document.getElementById("showWeek").classList.toggle("active", viewName === "timeGridWeek");
-      document.getElementById("showMonth").classList.toggle("active", viewName === "dayGridMonth");
-
-      ensureCalendar();
-      calendar.changeView(viewName);
-      calendar.updateSize();
-      setCalendarToolbarForWidth();
-      renderCalendar();
-    }
-
-    document.getElementById("showList").addEventListener("click", showListView);
-    document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
-    document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
-
-    // ===== FORM =====
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      document.getElementById("bookingForm").reset();
-      clearEditMode();
-      setMsg("", "");
-    });
-
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      setMsg("", "");
-
-      const car = document.getElementById("car").value;
-      const name = document.getElementById("name").value.trim();
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-
-      if (!name) return setMsg("Bitte Vorname eingeben.", "err");
-      if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
-      if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
-
-      const conflicts = allBookings
-        .filter(b => b.car === car && b.id !== editingId)
-        .some(b => overlaps(start, end, b.start, b.end));
-
-      if (conflicts) return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits belegt (Domizil oder Privat).", "err");
-
-      try {
-        if (editingId) {
-          await db.collection("bookings").doc(editingId).set({
-            car, name, start, end,
-            type: "privat",
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-
-          setMsg("✅ Privatbuchung aktualisiert", "ok");
-          clearEditMode();
-        } else {
-          await db.collection("bookings").add({
-            car, name, start, end,
-            type: "privat",
-            createdAt: new Date().toISOString()
-          });
-          setMsg("✅ Privatbuchung gespeichert", "ok");
-        }
-
-        e.target.reset();
-        setFilter(car);
-
-      } catch (err) {
-        console.error(err);
-        setMsg("❌ Fehler beim Speichern (Details in der Konsole)", "err");
-      }
-    });
-
-    // ===== FIRESTORE SYNC =====
-    function subscribeAll() {
-      db.collection("bookings").onSnapshot((snap) => {
-        allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderList();
-        if (document.getElementById("calendarWrap").style.display !== "none") renderCalendar();
-      }, (err) => {
-        console.error(err);
-        document.getElementById("bookings").innerHTML =
-          `<div class="dangerText">Fehler beim Laden. (Console prüfen)</div>`;
-      });
-    }
-
-    // Start
-    showListView();
-    subscribeAll();
-  </script>
+  db.collection("bookings").onSnapshot(s=>{
+    bookings=s.docs.map(d=>d.data());
+    renderList();
+  });
+</script>
 </body>
 </html>
