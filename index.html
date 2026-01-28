@@ -361,7 +361,14 @@
 
       wrap.innerHTML = "";
       if (!docs.length) {
-        wrap.innerHTML = `<em class="small2">Keine Buchungen vorhanden.</em>`;
+        div.innerHTML = `
+  <div>
+    <strong>${b.car} — ${isDomizil ? "Domizil" : "Privat"}</strong>
+    <div class="meta">${fmtLocal(b.start)} → ${fmtLocal(b.end)}</div>
+    <div class="small2">${(b.name || "").trim()}</div>
+  </div>
+`;
+
         return;
       }
 
