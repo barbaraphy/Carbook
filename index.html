@@ -438,7 +438,7 @@
     // Render: List (ID entfernt + klickbar)
     function renderList() {
       const wrap = document.getElementById("bookings");
-      const docs = sortBookings(filteredBookings());
+      const docs = sortBookings(filteredBookings().filter(b => b.type === "privat"));
 
       wrap.innerHTML = "";
       if (!docs.length) {
