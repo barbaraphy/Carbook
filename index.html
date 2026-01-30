@@ -99,8 +99,6 @@
     .item{
       border:1px solid #eee; border-radius:10px; padding:12px;
       display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff;
-
-      /* ✅ NEU: klickbar */
       cursor:pointer;
     }
     .item:hover{ background:#f9fafb; }
@@ -295,7 +293,7 @@
 
     // State
     let activeCarFilter = "ALL";
-    let allBookings = []; // {id, ...data}
+    let allBookings = []; // {id, ...data} inkl. Fixtermine
     let calendar = null;
     let editingId = null;
     let currentCalendarView = "timeGridWeek";
@@ -303,7 +301,100 @@
     const COLOR_DOMIZIL = "#2563eb";
     const COLOR_PRIVAT  = "#16a34a";
 
+    // =========================
+    // FIXE DOMIZIL-REGELN (wöchentlich)
+    // Wochentage: 1=Montag ... 7=Sonntag
+    // Slots: AM (08-12), PM (13-17), FULL (beide)
+    // =========================
+    const DOMIZIL_RULES = [
+      // Auto 1
+      { car:"Auto 1", name:"Bozo",    dow:1, slot:"AM" },
+      { car:"Auto 1", name:"Bozo",    dow:3, slot:"FULL" },
+      { car:"Auto 1", name:"Bozo",    dow:4, slot:"PM" },
+      { car:"Auto 1", name:"Mirjam",  dow:2, slot:"FULL" },
+      { car:"Auto 1", name:"Mirjam",  dow:5, slot:"FULL" },
+      { car:"Auto 1", name:"Barbara", dow:4, slot:"AM" },
+
+      // Auto 2
+      { car:"Auto 2", name:"Stefanie", dow:1, slot:"AM" },
+      { car:"Auto 2", name:"Stefanie", dow:2, slot:"PM" },
+      { car:"Auto 2", name:"Stefanie", dow:4, slot:"FULL" },
+      { car:"Auto 2", name:"Kathi",    dow:2, slot:"AM" },
+
+      // Auto 3
+      { car:"Auto 3", name:"Jano",   dow:2, slot:"PM" },
+      { car:"Auto 3", name:"Jano",   dow:5, slot:"PM" },
+      { car:"Auto 3", name:"Sebi",   dow:4, slot:"FULL" },
+      { car:"Auto 3", name:"Manuel", dow:1, slot:"PM" },
+      { car:"Auto 3", name:"Manuel", dow:3, slot:"PM" },
+
+      // Auto 4
+      { car:"Auto 4", name:"Nadja",   dow:1, slot:"PM" },
+      { car:"Auto 4", name:"Nadja",   dow:4, slot:"PM" },
+      { car:"Auto 4", name:"Sebi",    dow:2, slot:"FULL" },
+      { car:"Auto 4", name:"Vanessa", dow:3, slot:"FULL" },
+      { car:"Auto 4", name:"Vanessa", dow:5, slot:"FULL" },
+      { car:"Auto 4", name:"Kathi",   dow:4, slot:"AM" },
+    ];
+
+    const SLOT_TIMES = {
+      AM:   { start:"08:00", end:"12:00" },
+      PM:   { start:"13:00", end:"17:00" },
+    };
+
     // Helpers
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function ymd(date){
+      return `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
+    }
+    function localDT(date, hhmm){
+      return `${ymd(date)}T${hhmm}`;
+    }
+    function nextDow(start, dow){
+      const d = new Date(start);
+      const jsDow = d.getDay() === 0 ? 7 : d.getDay();
+      const add = (dow - jsDow + 7) % 7;
+      d.setDate(d.getDate() + add);
+      return d;
+    }
+    function generateFixedDomizil(rangeStart, rangeEnd){
+      const out = [];
+      const start = new Date(rangeStart);
+      const end = new Date(rangeEnd);
+
+      DOMIZIL_RULES.forEach(rule => {
+        let d = nextDow(start, rule.dow);
+        while (d <= end){
+          const day = new Date(d);
+
+          const addBlock = (slot, idxSuffix="") => {
+            const t = SLOT_TIMES[slot];
+            const id = `FIX-${rule.car.replace(" ","")}-${rule.name}-${rule.dow}-${slot}-${ymd(day)}${idxSuffix}`;
+            out.push({
+              id,
+              car: rule.car,
+              name: rule.name,
+              start: localDT(day, t.start),
+              end: localDT(day, t.end),
+              type: "domizil",
+              fixed: true
+            });
+          };
+
+          if (rule.slot === "FULL") {
+            addBlock("AM","-1");
+            addBlock("PM","-2");
+          } else {
+            addBlock(rule.slot);
+          }
+
+          d.setDate(d.getDate() + 7);
+        }
+      });
+
+      return out;
+    }
+
     function setMsg(text, kind) {
       const el = document.getElementById("msg");
       el.textContent = text || "";
@@ -344,7 +435,7 @@
       document.getElementById("editHint").style.display = "none";
     }
 
-    // Render: List (✅ ID-Tag entfernt + ✅ klickbar)
+    // Render: List (ID entfernt + klickbar)
     function renderList() {
       const wrap = document.getElementById("bookings");
       const docs = sortBookings(filteredBookings());
@@ -363,7 +454,6 @@
         const color = isDomizil ? COLOR_DOMIZIL : COLOR_PRIVAT;
         div.style.borderLeft = `6px solid ${color}`;
 
-        // ✅ Kein b.id.slice(...) mehr!
         div.innerHTML = `
           <div>
             <strong>${b.car} — ${isDomizil ? "Domizil" : "Privat"}</strong>
@@ -372,9 +462,7 @@
           </div>
         `;
 
-        // ✅ Klick auf Listeneintrag öffnet Modal (wie Kalender)
         div.addEventListener("click", () => openModalForBooking(b));
-
         wrap.appendChild(div);
       });
     }
@@ -403,6 +491,74 @@
         { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }
       );
     }
+
+    // Modal
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalClose = document.getElementById("modalClose");
+    const modalEdit = document.getElementById("modalEdit");
+    const modalDelete = document.getElementById("modalDelete");
+    let modalBookingId = null;
+
+    function openModalForBooking(b) {
+      modalBookingId = b.id;
+
+      document.getElementById("mCar").textContent = b.car || "";
+      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
+      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
+      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
+
+      const isPrivat = b.type === "privat";
+      modalEdit.style.display = isPrivat ? "inline-block" : "none";
+      modalDelete.style.display = isPrivat ? "inline-block" : "none";
+
+      modalOverlay.style.display = "flex";
+    }
+
+    function closeModal() {
+      modalOverlay.style.display = "none";
+      modalBookingId = null;
+    }
+
+    modalClose.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    modalEdit.addEventListener("click", () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      document.getElementById("car").value = b.car;
+      document.getElementById("name").value = (b.name || "").trim();
+      document.getElementById("start").value = b.start;
+      document.getElementById("end").value = b.end;
+
+      setEditMode(b.id);
+      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
+      closeModal();
+    });
+
+    modalDelete.addEventListener("click", async () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      const ok = confirm("Privatbuchung wirklich löschen?");
+      if (!ok) return;
+
+      try {
+        await db.collection("bookings").doc(b.id).delete();
+        if (editingId === b.id) {
+          document.getElementById("bookingForm").reset();
+          clearEditMode();
+        }
+        setMsg("✅ Privatbuchung gelöscht", "ok");
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
+      } finally {
+        closeModal();
+      }
+    });
 
     function ensureCalendar() {
       if (calendar) return;
@@ -525,74 +681,6 @@
     document.getElementById("showWeek").addEventListener("click", () => showCalendarView("timeGridWeek"));
     document.getElementById("showMonth").addEventListener("click", () => showCalendarView("dayGridMonth"));
 
-    // Modal
-    const modalOverlay = document.getElementById("modalOverlay");
-    const modalClose = document.getElementById("modalClose");
-    const modalEdit = document.getElementById("modalEdit");
-    const modalDelete = document.getElementById("modalDelete");
-    let modalBookingId = null;
-
-    function openModalForBooking(b) {
-      modalBookingId = b.id;
-
-      document.getElementById("mCar").textContent = b.car || "";
-      document.getElementById("mType").textContent = (b.type === "domizil") ? "Domizil" : "Privat";
-      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
-      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
-
-      const isPrivat = b.type === "privat";
-      modalEdit.style.display = isPrivat ? "inline-block" : "none";
-      modalDelete.style.display = isPrivat ? "inline-block" : "none";
-
-      modalOverlay.style.display = "flex";
-    }
-
-    function closeModal() {
-      modalOverlay.style.display = "none";
-      modalBookingId = null;
-    }
-
-    modalClose.addEventListener("click", closeModal);
-    modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) closeModal();
-    });
-
-    modalEdit.addEventListener("click", () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-
-      document.getElementById("car").value = b.car;
-      document.getElementById("name").value = (b.name || "").trim();
-      document.getElementById("start").value = b.start;
-      document.getElementById("end").value = b.end;
-
-      setEditMode(b.id);
-      setMsg("Bearbeiten: ändere die Felder und klicke „Änderungen speichern“.", "ok");
-      closeModal();
-    });
-
-    modalDelete.addEventListener("click", async () => {
-      const b = bookingById(modalBookingId);
-      if (!b || b.type !== "privat") return;
-
-      const ok = confirm("Privatbuchung wirklich löschen?");
-      if (!ok) return;
-
-      try {
-        await db.collection("bookings").doc(b.id).delete();
-        if (editingId === b.id) {
-          document.getElementById("bookingForm").reset();
-          clearEditMode();
-        }
-        setMsg("✅ Privatbuchung gelöscht", "ok");
-      } catch (err) {
-        console.error(err);
-        setMsg("❌ Fehler beim Löschen (Details in der Konsole)", "err");
-      } finally {
-        closeModal();
-      }
-    });
-
     // Form
     document.getElementById("resetBtn").addEventListener("click", () => {
       document.getElementById("bookingForm").reset();
@@ -649,12 +737,25 @@
       }
     });
 
-    // Firestore sync
+    // Firestore sync + Fixtermine mergen
     function subscribeAll() {
       db.collection("bookings").onSnapshot((snap) => {
-        allBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Privatbuchungen aus Firestore
+        const firestoreBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Fixtermine generieren (heute-30 bis heute+180 Tage)
+        const now = new Date();
+        const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 30);
+        const rangeEnd   = new Date(now); rangeEnd.setDate(rangeEnd.getDate() + 180);
+        const fixedDomizil = generateFixedDomizil(rangeStart, rangeEnd);
+
+        // Merge
+        allBookings = [...fixedDomizil, ...firestoreBookings];
+
         renderList();
         if (document.getElementById("calendarWrap").style.display !== "none") renderCalendar();
+
       }, (err) => {
         console.error(err);
         document.getElementById("bookings").innerHTML =
