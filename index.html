@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>AutoPlan</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
 
@@ -168,14 +168,18 @@
     .fc .fc-button  { padding: .32em .55em; font-size: 0.92em; }
 
     @media (max-width: 600px) {
-      .fc .fc-toolbar-title              { font-size: 0.85rem; }
-      .fc .fc-button                     { padding: .30em .48em; font-size: 0.88em; }
-      .fc .fc-col-header-cell-cushion    { font-size: 0.78em; padding: 2px 0; }
-      .fc .fc-daygrid-day-number         { font-size: 0.8em; padding: 2px; }
-      .fc .fc-timegrid-body,
-      .fc .fc-timegrid-slots,
-      .fc .fc-scroller-harness,
-      .fc .fc-scroller                   { touch-action: none; -webkit-overflow-scrolling: touch; }
+      .fc .fc-toolbar                    { gap: 4px; flex-wrap: wrap; justify-content: center; }
+      .fc .fc-toolbar-chunk              { display: flex; gap: 4px; }
+      .fc .fc-toolbar-title              { font-size: 0.82rem; text-align: center; width: 100%; }
+      .fc .fc-button                     { padding: .26em .40em; font-size: 0.80em; }
+      .fc .fc-col-header-cell-cushion    { font-size: 0.70em; padding: 2px 0; }
+      .fc .fc-daygrid-day-number         { font-size: 0.72em; padding: 2px; }
+      .fc .fc-timegrid-slot              { height: 1.8em; }
+      .fc .fc-timegrid-axis-cushion,
+      .fc .fc-timegrid-slot-label-cushion { font-size: 0.68em; padding: 0 2px; }
+      .fc .fc-event-title,
+      .fc .fc-event-time                 { font-size: 0.70em; }
+      .fc .fc-scroller                   { -webkit-overflow-scrolling: touch; }
     }
 
     .modalOverlay {
@@ -595,7 +599,7 @@
   function ensureCalendar() {
     if (calendar) return;
     calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
-      initialView:           "timeGridWeek",
+      initialView:           window.innerWidth < 600 ? "timeGridDay" : "timeGridWeek",
       height:                "auto",
       nowIndicator:          true,
       firstDay:              1,
@@ -604,9 +608,16 @@
       allDaySlot:            false,
       expandRows:            true,
       locale:                "de",
-      buttonText:            { today:"Heute", month:"Monat", week:"Woche", day:"Tag" },
-      headerToolbar:         { left:"prev,next today", center:"title", right:"dayGridMonth,timeGridWeek,timeGridDay" },
-      titleFormat:           { year:"numeric", month:"short", day:"numeric" },
+      buttonText:            { today:"Heute", month:"Mon", week:"Wo", day:"Tag" },
+      headerToolbar:         window.innerWidth < 600
+        ? { left:"prev,next", center:"title", right:"today" }
+        : { left:"prev,next today", center:"title", right:"dayGridMonth,timeGridWeek,timeGridDay" },
+      footerToolbar:         window.innerWidth < 600
+        ? { center:"dayGridMonth,timeGridWeek,timeGridDay" }
+        : false,
+      titleFormat:           window.innerWidth < 600
+        ? { month:"short", day:"numeric" }
+        : { year:"numeric", month:"short", day:"numeric" },
       selectable:            true,
       selectMirror:          true,
       longPressDelay:        150,
