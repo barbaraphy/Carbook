@@ -1,369 +1,716 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"/>
-<title>AutoPlan</title>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <title>AutoPlan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
 
-<style>
-body{
-font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-background:#f5f6f8;
-margin:0;
-padding:20px;
-}
+  <style>
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:#f5f6f8;
+      margin:0;
+      padding:22px 14px;
+      color:#222;
+    }
+    .container{
+      max-width:1050px;
+      margin:auto;
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    }
+    h1{ margin:0 0 6px 0; }
+    p{ margin:0 0 14px 0; color:#444; line-height:1.5; }
 
-.container{
-max-width:1100px;
-margin:auto;
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .pill{
+      background:#f3f4f6;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      color:#111;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .legend-dot{ width:10px; height:10px; border-radius:99px; display:inline-block; }
+    .dot-domizil{ background:#2563eb; }
+    .dot-privat{ background:#16a34a; }
 
-.cars{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-gap:10px;
-margin-bottom:15px;
-}
+    .cars{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:10px;
+      margin:10px 0 16px 0;
+    }
+    button.car{
+      padding:12px;
+      border:none;
+      background:#2563eb;
+      color:#fff;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.car:hover{ background:#1e40af; }
+    button.car.active{ outline:3px solid rgba(37,99,235,.35); }
 
-button.car{
-padding:12px;
-border:none;
-background:#2563eb;
-color:white;
-border-radius:8px;
-font-weight:700;
-cursor:pointer;
-}
+    .layout{
+      display:grid;
+      gap:16px;
+      align-items:start;
+      grid-template-columns:340px minmax(0,1fr);
+    }
+    .layout > *{ min-width:0; }
 
-button.car.active{
-outline:3px solid rgba(37,99,235,.4);
-}
+    @media (max-width:980px){
+      .layout{ grid-template-columns:1fr; }
+    }
 
-#calendar{
-border:1px solid #eee;
-border-radius:10px;
-padding:10px;
-}
+    @media (min-width:1200px){
+      .layout{ grid-template-columns:380px minmax(0,1fr); }
+    }
 
-.modalOverlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.45);
-display:none;
-align-items:center;
-justify-content:center;
-z-index:9999;
-}
+    .card{
+      border:1px solid #eee;
+      border-radius:10px;
+      padding:14px;
+      background:#fff;
+      overflow:hidden;
+    }
 
-.modal{
-background:white;
-padding:20px;
-border-radius:10px;
-width:90%;
-max-width:400px;
-}
+    form{ display:grid; gap:10px; }
+    label{ display:block; font-size:14px; color:#333; }
+    input,select{
+      width:100%;
+      padding:10px;
+      border:1px solid #d6d6d6;
+      border-radius:8px;
+      font-size:14px;
+      box-sizing:border-box;
+    }
 
-.btn{
-border:none;
-padding:8px 12px;
-border-radius:8px;
-cursor:pointer;
-}
+    .row2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
 
-.btn.primary{background:#16a34a;color:white;}
-.btn.danger{background:#dc2626;color:white;}
+    @media (min-width:981px){
+      .row2{ grid-template-columns:1fr; }
+    }
 
-.row{
-display:flex;
-gap:10px;
-justify-content:flex-end;
-margin-top:10px;
-}
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:2px;
+    }
 
-.legend{
-margin-bottom:10px;
-font-size:14px;
-}
+    .btn{
+      border:none;
+      border-radius:8px;
+      padding:10px 12px;
+      font-weight:600;
+      cursor:pointer;
+      background:#e5e7eb;
+      color:#111;
+    }
+    .btn:hover{ background:#d1d5db; }
+    .btn.primary{ background:#16a34a; color:#fff; }
+    .btn.primary:hover{ background:#15803d; }
+    .btn.danger{ background:#dc2626; color:#fff; }
+    .btn.danger:hover{ background:#b91c1c; }
 
-.legend span{
-display:inline-block;
-width:10px;
-height:10px;
-border-radius:10px;
-margin-right:5px;
-}
+    .msg{ margin-top:6px; font-size:14px; }
+    .msg.ok{ color:#15803d; }
+    .msg.err{ color:#b91c1c; }
+    .small{ font-size:13px; color:#555; line-height:1.35; }
+    .hr{ border:none; border-top:1px solid #eee; margin:12px 0; }
 
-.dom{background:#2563eb;}
-.priv{background:#16a34a;}
-</style>
+    #calendar{
+      border:1px solid #eee;
+      border-radius:10px;
+      padding:10px;
+      overflow:hidden;
+    }
+
+    .fc .fc-toolbar-title{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+      font-size:1.02rem;
+      line-height:1.15;
+    }
+    .fc .fc-toolbar{
+      flex-wrap:nowrap;
+      gap:6px;
+    }
+    .fc .fc-button{
+      padding:.32em .55em;
+      font-size:0.92em;
+    }
+
+    @media (max-width:600px){
+      .fc .fc-toolbar-title{ font-size:0.85rem; }
+      .fc .fc-button{ padding:.30em .48em; font-size:0.88em; }
+      .fc .fc-col-header-cell-cushion{ font-size:0.78em; padding:2px 0; }
+      .fc .fc-daygrid-day-number{ font-size:0.8em; padding:2px; }
+
+      .fc .fc-timegrid-body,
+      .fc .fc-timegrid-slots,
+      .fc .fc-scroller-harness,
+      .fc .fc-scroller{
+        touch-action:none;
+        -webkit-overflow-scrolling:touch;
+      }
+    }
+
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modal{
+      width:min(560px,100%);
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      padding:16px;
+    }
+    .modal h3{ margin:0 0 10px 0; }
+    .modal .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:12px;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:8px 12px;
+    }
+    .kv div{ font-size:14px; }
+    .kv .k{ color:#555; }
+    .kv .v{ color:#111; font-weight:600; }
+  </style>
 </head>
 
 <body>
-
-<div class="container">
-
-<h1>AutoPlan</h1>
-
-<div class="legend">
-<span class="dom"></span>Domizil
-&nbsp;&nbsp;
-<span class="priv"></span>Privat
-</div>
-
-<div class="cars">
-<button class="car active" data-car="Auto 1">🚗 Auto 1</button>
-<button class="car" data-car="Auto 2">🚗 Auto 2</button>
-<button class="car" data-car="Auto 3">🚗 Auto 3</button>
-<button class="car" data-car="Auto 4">🚗 Auto 4</button>
-</div>
-
-<div id="calendar"></div>
-
-</div>
-
-
-<div class="modalOverlay" id="modalOverlay">
-<div class="modal">
-
-<div><b id="mCar"></b></div>
-<div id="mName"></div>
-<div id="mTime"></div>
-
-<div class="row">
-<button class="btn" id="modalClose">Schliessen</button>
-<button class="btn" id="modalEdit">Bearbeiten</button>
-<button class="btn danger" id="modalDelete">Löschen</button>
-</div>
-
-</div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
-<script>
-
-const firebaseConfig={
-apiKey:"AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
-authDomain:"autoplan-6b642.firebaseapp.com",
-projectId:"autoplan-6b642"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-
-let activeCar="Auto 1";
-let allBookings=[];
-let calendar=null;
-
-const COLOR_DOM="#2563eb";
-const COLOR_PRIV="#16a34a";
-
-const DOMIZIL_RULES=[
-
-{car:"Auto 1",name:"Bozo",dow:1,slot:"FULL"},
-{car:"Auto 1",name:"Bozo",dow:3,slot:"FULL"},
-{car:"Auto 1",name:"Bozo",dow:4,slot:"PM"},
-{car:"Auto 1",name:"Mirjam",dow:2,slot:"FULL"},
-{car:"Auto 1",name:"Mirjam",dow:5,slot:"FULL"},
-{car:"Auto 1",name:"Barbara",dow:4,slot:"AM"},
-
-{car:"Auto 2",name:"Vladimir",dow:1,slot:"AM"},
-{car:"Auto 2",name:"Vladimir",dow:3,slot:"AM"},
-{car:"Auto 2",name:"Kathi",dow:2,slot:"AM"},
-{car:"Auto 2",name:"Kathi",dow:4,slot:"AM"},
-
-{car:"Auto 3",name:"Jano",dow:2,slot:"PM"},
-{car:"Auto 3",name:"Jano",dow:5,slot:"PM"},
-{car:"Auto 3",name:"Sebi",dow:4,slot:"FULL"},
-{car:"Auto 3",name:"Manuel",dow:1,slot:"PM"},
-{car:"Auto 3",name:"Manuel",dow:3,slot:"PM"},
-
-{car:"Auto 4",name:"Nadja",dow:1,slot:"PM"},
-{car:"Auto 4",name:"Nadja",dow:4,slot:"PM"},
-{car:"Auto 4",name:"Sebi",dow:2,slot:"FULL"},
-{car:"Auto 4",name:"Vanessa",dow:3,slot:"FULL"},
-{car:"Auto 4",name:"Vanessa",dow:5,slot:"FULL"}
-
-];
-
-const SLOT_TIMES={
-AM:{start:"08:00",end:"12:00"},
-PM:{start:"13:00",end:"17:00"}
-};
-
-function generateFixed(start,end){
-
-let out=[];
-
-DOMIZIL_RULES.forEach(rule=>{
-
-let d=new Date(start);
-
-while(d<=end){
-
-let jsDow=d.getDay()===0?7:d.getDay();
-
-if(jsDow===rule.dow){
-
-let add=(slot)=>{
-
-let t=SLOT_TIMES[slot];
-
-out.push({
-id:"FIX"+rule.name+d,
-car:rule.car,
-name:rule.name,
-start:d.toISOString().slice(0,10)+"T"+t.start,
-end:d.toISOString().slice(0,10)+"T"+t.end,
-type:"domizil"
-});
-
-};
-
-if(rule.slot==="FULL"){
-add("AM");
-add("PM");
-}else{
-add(rule.slot);
-}
-
-}
-
-d.setDate(d.getDate()+1);
-
-}
-
-});
-
-return out;
-
-}
-
-function renderCalendar(){
-
-calendar.removeAllEvents();
-
-let events=allBookings
-.filter(b=>b.car===activeCar)
-.map(b=>({
-
-id:b.id,
-title:b.car+" – "+b.name,
-start:b.start,
-end:b.end,
-backgroundColor:b.type==="domizil"?COLOR_DOM:COLOR_PRIV,
-borderColor:b.type==="domizil"?COLOR_DOM:COLOR_PRIV
-
-}));
-
-calendar.addEventSource(events);
-
-}
-
-function subscribe(){
-
-db.collection("bookings").onSnapshot(snap=>{
-
-let priv=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-let start=new Date();
-start.setDate(start.getDate()-30);
-
-let end=new Date();
-end.setDate(end.getDate()+180);
-
-let fixed=generateFixed(start,end);
-
-allBookings=[...fixed,...priv];
-
-renderCalendar();
-
-});
-
-}
-
-calendar=new FullCalendar.Calendar(
-document.getElementById("calendar"),
-{
-initialView:"timeGridWeek",
-locale:"de",
-firstDay:1,
-nowIndicator:true,
-slotMinTime:"06:00:00",
-slotMaxTime:"21:00:00",
-height:"auto",
-
-buttonText:{
-today:"Heute",
-month:"Monat",
-week:"Woche",
-day:"Tag"
-},
-
-headerToolbar:{
-left:"prev,next today",
-center:"title",
-right:"dayGridMonth,timeGridWeek,timeGridDay"
-},
-
-eventClick:(info)=>{
-
-let b=allBookings.find(x=>x.id===info.event.id);
-if(!b)return;
-
-document.getElementById("mCar").textContent=b.car;
-document.getElementById("mName").textContent=b.name;
-document.getElementById("mTime").textContent=b.start+" → "+b.end;
-
-document.getElementById("modalDelete").style.display=b.type==="privat"?"inline-block":"none";
-document.getElementById("modalEdit").style.display=b.type==="privat"?"inline-block":"none";
-
-document.getElementById("modalOverlay").style.display="flex";
-
-window.current=b;
-
-}
-
-});
-
-calendar.render();
-
-document.querySelectorAll(".car").forEach(btn=>{
-btn.onclick=()=>{
-activeCar=btn.dataset.car;
-
-document.querySelectorAll(".car").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-
-renderCalendar();
-};
-});
-
-document.getElementById("modalClose").onclick=()=>{
-document.getElementById("modalOverlay").style.display="none";
-};
-
-document.getElementById("modalDelete").onclick=async()=>{
-
-if(!confirm("Termin löschen?"))return;
-
-await db.collection("bookings").doc(window.current.id).delete();
-
-document.getElementById("modalOverlay").style.display="none";
-
-};
-
-subscribe();
-
-</script>
-
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>AutoPlan</h1>
+        <p>Privatbuchungen erfassen. Domiziltermine sind als <b>Fixtermine</b> (blau) hinterlegt und blockieren automatisch.</p>
+      </div>
+      <div class="pill" title="Farblegende">
+        <span class="legend-dot dot-domizil"></span> Domizil
+        <span class="legend-dot dot-privat" style="margin-left:6px;"></span> Privat
+      </div>
+    </div>
+
+    <div class="cars">
+      <button class="car active" data-car="Auto 1">🚗 Auto 1</button>
+      <button class="car" data-car="Auto 2">🚗 Auto 2</button>
+      <button class="car" data-car="Auto 3">🚗 Auto 3</button>
+      <button class="car" data-car="Auto 4">🚗 Auto 4</button>
+    </div>
+
+    <div class="layout">
+      <div class="card">
+        <h2 style="margin:0 0 10px 0;">Privat buchen</h2>
+
+        <form id="bookingForm">
+          <div>
+            <label for="car">Auto</label>
+            <select id="car" required>
+              <option value="Auto 1">Auto 1</option>
+              <option value="Auto 2">Auto 2</option>
+              <option value="Auto 3">Auto 3</option>
+              <option value="Auto 4">Auto 4</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="name">Vorname</label>
+            <input id="name" required placeholder="z.B. Anna" />
+          </div>
+
+          <div class="row2">
+            <div>
+              <label for="start">Start</label>
+              <input id="start" type="datetime-local" required />
+            </div>
+            <div>
+              <label for="end">Ende</label>
+              <input id="end" type="datetime-local" required />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" type="submit" id="saveBtn">Buchung speichern</button>
+            <button class="btn" type="button" id="resetBtn">Zurücksetzen</button>
+            <span class="small" id="editHint" style="display:none;">Bearbeitungsmodus aktiv</span>
+          </div>
+        </form>
+
+        <div id="msg" class="msg"></div>
+
+        <hr class="hr" />
+        <div class="small">
+          Wochen-/Tagansicht: ziehen oder lange drücken + ziehen.<br>
+          Monatsansicht: Tag antippen setzt 08:00–09:00.<br>
+          Privattermine können bearbeitet oder gelöscht werden.
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3 id="modalTitle">Termin</h3>
+      <div class="kv">
+        <div class="k">Auto</div><div class="v" id="mCar"></div>
+        <div class="k">Art</div><div class="v" id="mType"></div>
+        <div class="k">Name</div><div class="v" id="mName"></div>
+        <div class="k">Zeit</div><div class="v" id="mTime"></div>
+      </div>
+      <div class="row">
+        <button class="btn" id="modalClose">Schliessen</button>
+        <button class="btn" id="modalEdit" style="display:none;">Bearbeiten</button>
+        <button class="btn danger" id="modalDelete" style="display:none;">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVTH62pNLqZMh-8myCmQxjnXG_gvAPtB4",
+      authDomain: "autoplan-6b642.firebaseapp.com",
+      projectId: "autoplan-6b642",
+      storageBucket: "autoplan-6b642.firebasestorage.app",
+      messagingSenderId: "667091765339",
+      appId: "1:667091765339:web:fea7cb7cb5391b5c85177e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let activeCarFilter = "Auto 1";
+    let allBookings = [];
+    let calendar = null;
+    let editingId = null;
+    let modalBookingId = null;
+    let currentCalendarView = "timeGridWeek";
+
+    const COLOR_DOMIZIL = "#2563eb";
+    const COLOR_PRIVAT = "#16a34a";
+
+    const DOMIZIL_RULES = [
+      { car:"Auto 1", name:"Bozo",    dow:1, slot:"FULL" },
+      { car:"Auto 1", name:"Bozo",    dow:3, slot:"FULL" },
+      { car:"Auto 1", name:"Bozo",    dow:4, slot:"PM" },
+      { car:"Auto 1", name:"Mirjam",  dow:2, slot:"FULL" },
+      { car:"Auto 1", name:"Mirjam",  dow:5, slot:"FULL" },
+      { car:"Auto 1", name:"Barbara", dow:4, slot:"AM" },
+
+      { car:"Auto 2", name:"Vladimir", dow:1, slot:"AM" },
+      { car:"Auto 2", name:"Vladimir", dow:3, slot:"AM" },
+      { car:"Auto 2", name:"Kathi",    dow:2, slot:"AM" },
+      { car:"Auto 2", name:"Kathi",    dow:4, slot:"AM" },
+
+      { car:"Auto 3", name:"Jano",   dow:2, slot:"PM" },
+      { car:"Auto 3", name:"Jano",   dow:5, slot:"PM" },
+      { car:"Auto 3", name:"Sebi",   dow:4, slot:"FULL" },
+      { car:"Auto 3", name:"Manuel", dow:1, slot:"PM" },
+      { car:"Auto 3", name:"Manuel", dow:3, slot:"PM" },
+
+      { car:"Auto 4", name:"Nadja",   dow:1, slot:"PM" },
+      { car:"Auto 4", name:"Nadja",   dow:4, slot:"PM" },
+      { car:"Auto 4", name:"Sebi",    dow:2, slot:"FULL" },
+      { car:"Auto 4", name:"Vanessa", dow:3, slot:"FULL" },
+      { car:"Auto 4", name:"Vanessa", dow:5, slot:"FULL" },
+    ];
+
+    const SLOT_TIMES = {
+      AM: { start:"08:00", end:"12:00" },
+      PM: { start:"13:00", end:"17:00" }
+    };
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function ymd(date){
+      return `${date.getFullYear()}-${pad2(date.getMonth()+1)}-${pad2(date.getDate())}`;
+    }
+    function localDT(date, hhmm){
+      return `${ymd(date)}T${hhmm}`;
+    }
+    function nextDow(start, dow){
+      const d = new Date(start);
+      const jsDow = d.getDay() === 0 ? 7 : d.getDay();
+      const add = (dow - jsDow + 7) % 7;
+      d.setDate(d.getDate() + add);
+      return d;
+    }
+
+    function generateFixedDomizil(rangeStart, rangeEnd){
+      const out = [];
+      const start = new Date(rangeStart);
+      const end = new Date(rangeEnd);
+
+      DOMIZIL_RULES.forEach(rule => {
+        let d = nextDow(start, rule.dow);
+
+        while (d <= end){
+          const day = new Date(d);
+
+          const addBlock = (slot, suffix="") => {
+            const t = SLOT_TIMES[slot];
+            out.push({
+              id: `FIX-${rule.car}-${rule.name}-${rule.dow}-${slot}-${ymd(day)}${suffix}`,
+              car: rule.car,
+              name: rule.name,
+              start: localDT(day, t.start),
+              end: localDT(day, t.end),
+              type: "domizil",
+              fixed: true
+            });
+          };
+
+          if (rule.slot === "FULL") {
+            addBlock("AM","-1");
+            addBlock("PM","-2");
+          } else {
+            addBlock(rule.slot);
+          }
+
+          d.setDate(d.getDate() + 7);
+        }
+      });
+
+      return out;
+    }
+
+    function setMsg(text, kind) {
+      const el = document.getElementById("msg");
+      el.textContent = text || "";
+      el.className = "msg " + (kind || "");
+    }
+
+    function fmtLocal(dtStr) {
+      if (!dtStr) return "";
+      return dtStr.replace("T"," ").slice(0,16);
+    }
+
+    function overlaps(aStart, aEnd, bStart, bEnd) {
+      const as = new Date(aStart), ae = new Date(aEnd);
+      const bs = new Date(bStart), be = new Date(bEnd);
+      return as < be && ae > bs;
+    }
+
+    function filteredBookings() {
+      return allBookings.filter(b => b.car === activeCarFilter);
+    }
+
+    function sortBookings(arr) {
+      return arr.slice().sort((x,y) => (x.start || "").localeCompare(y.start || ""));
+    }
+
+    function toDatetimeLocal(dateObj) {
+      const d = new Date(dateObj);
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+
+    function bookingById(id) {
+      return allBookings.find(b => b.id === id) || null;
+    }
+
+    function setEditMode(id) {
+      editingId = id;
+      document.getElementById("saveBtn").textContent = "Änderungen speichern";
+      document.getElementById("editHint").style.display = "inline";
+    }
+
+    function clearEditMode() {
+      editingId = null;
+      document.getElementById("saveBtn").textContent = "Buchung speichern";
+      document.getElementById("editHint").style.display = "none";
+    }
+
+    function bookingsToEvents(bookings) {
+      return sortBookings(bookings).map(b => {
+        const isDom = b.type === "domizil";
+        return {
+          id: b.id,
+          title: `${b.car} – ${(b.name || "").trim()}`,
+          start: b.start,
+          end: b.end,
+          backgroundColor: isDom ? COLOR_DOMIZIL : COLOR_PRIVAT,
+          borderColor: isDom ? COLOR_DOMIZIL : COLOR_PRIVAT
+        };
+      });
+    }
+
+    function setCalendarToolbarForWidth() {
+      if (!calendar) return;
+      calendar.setOption("headerToolbar", {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay"
+      });
+    }
+
+    function openModalForBooking(b) {
+      modalBookingId = b.id;
+      document.getElementById("mCar").textContent = b.car || "";
+      document.getElementById("mType").textContent = b.type === "domizil" ? "Domizil" : "Privat";
+      document.getElementById("mName").textContent = (b.name || "").trim() || "-";
+      document.getElementById("mTime").textContent = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
+
+      const isPrivat = b.type === "privat";
+      document.getElementById("modalEdit").style.display = isPrivat ? "inline-block" : "none";
+      document.getElementById("modalDelete").style.display = isPrivat ? "inline-block" : "none";
+      document.getElementById("modalOverlay").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+      modalBookingId = null;
+    }
+
+    function ensureCalendar() {
+      if (calendar) return;
+
+      calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        initialView: currentCalendarView,
+        height: "auto",
+        nowIndicator: true,
+        firstDay: 1,
+        slotMinTime: "06:00:00",
+        slotMaxTime: "21:00:00",
+        allDaySlot: false,
+        expandRows: true,
+        locale: "de",
+        buttonText: {
+          today: "Heute",
+          month: "Monat",
+          week: "Woche",
+          day: "Tag"
+        },
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "dayGridMonth,timeGridWeek,timeGridDay"
+        },
+        titleFormat: { year: "numeric", month: "short", day: "numeric" },
+
+        selectable: true,
+        selectMirror: true,
+        longPressDelay: 150,
+        selectLongPressDelay: 150,
+        eventLongPressDelay: 150,
+        selectMinDistance: 0,
+
+        dateClick: (info) => {
+          const carSel = document.getElementById("car");
+          carSel.value = activeCarFilter;
+
+          const start = new Date(info.date);
+          const end = new Date(info.date);
+
+          if (calendar.view.type === "dayGridMonth") {
+            start.setHours(8,0,0,0);
+            end.setHours(9,0,0,0);
+          } else {
+            end.setMinutes(end.getMinutes() + 30);
+          }
+
+          document.getElementById("start").value = toDatetimeLocal(start);
+          document.getElementById("end").value = toDatetimeLocal(end);
+          setMsg("✅ Zeit übernommen – du kannst sie links anpassen.", "ok");
+        },
+
+        select: (info) => {
+          document.getElementById("car").value = activeCarFilter;
+          document.getElementById("start").value = toDatetimeLocal(info.start);
+          document.getElementById("end").value = toDatetimeLocal(info.end);
+          setMsg("✅ Zeitraum übernommen – du kannst ihn links anpassen.", "ok");
+        },
+
+        eventClick: (info) => {
+          const b = bookingById(info.event.id);
+          if (b) openModalForBooking(b);
+        },
+
+        windowResize: () => setCalendarToolbarForWidth()
+      });
+
+      calendar.render();
+      setCalendarToolbarForWidth();
+    }
+
+    function renderCalendar() {
+      ensureCalendar();
+      calendar.removeAllEvents();
+      calendar.addEventSource(bookingsToEvents(filteredBookings()));
+    }
+
+    function setFilter(newFilter) {
+      activeCarFilter = newFilter;
+
+      document.querySelectorAll("button.car").forEach(b => {
+        b.classList.toggle("active", b.dataset.car === newFilter);
+      });
+
+      document.getElementById("car").value = newFilter;
+      renderCalendar();
+    }
+
+    document.querySelectorAll("button.car").forEach(btn => {
+      btn.addEventListener("click", () => setFilter(btn.dataset.car));
+    });
+
+    document.getElementById("modalClose").addEventListener("click", closeModal);
+    document.getElementById("modalOverlay").addEventListener("click", (e) => {
+      if (e.target === document.getElementById("modalOverlay")) closeModal();
+    });
+
+    document.getElementById("modalEdit").addEventListener("click", () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+
+      document.getElementById("car").value = b.car;
+      document.getElementById("name").value = (b.name || "").trim();
+      document.getElementById("start").value = b.start;
+      document.getElementById("end").value = b.end;
+
+      setEditMode(b.id);
+      setMsg("Bearbeiten: Daten links anpassen und speichern.", "ok");
+      closeModal();
+    });
+
+    document.getElementById("modalDelete").addEventListener("click", async () => {
+      const b = bookingById(modalBookingId);
+      if (!b || b.type !== "privat") return;
+      if (!confirm("Privatbuchung wirklich löschen?")) return;
+
+      try {
+        await db.collection("bookings").doc(b.id).delete();
+        if (editingId === b.id) {
+          document.getElementById("bookingForm").reset();
+          clearEditMode();
+        }
+        setMsg("✅ Privatbuchung gelöscht", "ok");
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Löschen", "err");
+      } finally {
+        closeModal();
+      }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      document.getElementById("bookingForm").reset();
+      document.getElementById("car").value = activeCarFilter;
+      clearEditMode();
+      setMsg("", "");
+    });
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setMsg("", "");
+
+      const car = document.getElementById("car").value;
+      const name = document.getElementById("name").value.trim();
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+
+      if (!name) return setMsg("Bitte Vorname eingeben.", "err");
+      if (!start || !end) return setMsg("Bitte Start und Ende eingeben.", "err");
+      if (end <= start) return setMsg("Ende muss nach Start sein.", "err");
+
+      const conflicts = allBookings
+        .filter(b => b.car === car && b.id !== editingId)
+        .some(b => overlaps(start, end, b.start, b.end));
+
+      if (conflicts) {
+        return setMsg("❌ Konflikt: Auto ist in diesem Zeitraum bereits belegt.", "err");
+      }
+
+      try {
+        if (editingId) {
+          await db.collection("bookings").doc(editingId).set({
+            car, name, start, end,
+            type: "privat",
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+
+          setMsg("✅ Privatbuchung aktualisiert", "ok");
+          clearEditMode();
+        } else {
+          await db.collection("bookings").add({
+            car, name, start, end,
+            type: "privat",
+            createdAt: new Date().toISOString()
+          });
+
+          setMsg("✅ Privatbuchung gespeichert", "ok");
+        }
+
+        e.target.reset();
+        document.getElementById("car").value = activeCarFilter;
+      } catch (err) {
+        console.error(err);
+        setMsg("❌ Fehler beim Speichern", "err");
+      }
+    });
+
+    function subscribeAll() {
+      db.collection("bookings").onSnapshot((snap) => {
+        const firestoreBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const now = new Date();
+        const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 30);
+        const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() + 180);
+
+        const fixedDomizil = generateFixedDomizil(rangeStart, rangeEnd);
+        allBookings = [...fixedDomizil, ...firestoreBookings];
+
+        renderCalendar();
+      }, (err) => {
+        console.error(err);
+      });
+    }
+
+    document.getElementById("car").value = activeCarFilter;
+    ensureCalendar();
+    subscribeAll();
+  </script>
 </body>
 </html>
