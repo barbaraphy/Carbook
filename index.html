@@ -1206,12 +1206,22 @@
           }
         }
 
-        document.getElementById("bookingForm").reset();
-        document.getElementById("car").value = activeCarFilter;
-        document.getElementById("type").value = "privat";
-        document.getElementById("isSeries").checked = false;
-        showSeriesBox();
-        clearEditMode();
+        const lastType = document.getElementById("type").value;
+const lastCar = document.getElementById("car").value;
+const lastName = document.getElementById("name").value;
+const lastSeries = document.getElementById("isSeries").checked;
+const lastSeriesUntil = document.getElementById("seriesUntil").value;
+
+document.getElementById("bookingForm").reset();
+
+document.getElementById("type").value = lastType;
+document.getElementById("car").value = lastCar;
+document.getElementById("name").value = lastName;
+document.getElementById("isSeries").checked = lastSeries;
+document.getElementById("seriesUntil").value = lastSeriesUntil;
+
+showSeriesBox();
+clearEditMode();
       } catch (err) {
         console.error(err);
         setMsg("❌ Fehler beim Speichern", "err");
