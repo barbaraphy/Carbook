@@ -52,7 +52,8 @@
     }
     .dot-domizil  { background: #2563eb; }
     .dot-privat   { background: #16a34a; }
-    .dot-conflict { background: #dc2626; }
+    .dot-conflict   { background: #dc2626; }
+    .dot-betrieblich { background: #ea580c; }
 
     .cars {
       display: grid;
@@ -235,7 +236,8 @@
     </div>
     <div class="pill">
       <span class="legend-dot dot-domizil"></span> Domizil
-      <span class="legend-dot dot-privat"  style="margin-left:6px;"></span> Privat
+      <span class="legend-dot dot-privat" style="margin-left:6px;"></span> Privat
+      <span class="legend-dot dot-betrieblich" style="margin-left:6px;"></span> Betrieblich
       <span class="legend-dot dot-conflict" style="margin-left:6px;"></span> Konflikt
     </div>
   </div>
@@ -257,9 +259,10 @@
         <div>
           <label for="type">Art</label>
           <select id="type" required>
-            <option value="privat">Privat</option>
-            <option value="domizil">Domizil</option>
-          </select>
+                <option value="privat">Privat</option>
+                <option value="domizil">Domizil</option>
+                <option value="betrieblich">Betrieblich</option>
+              </select>
         </div>
 
         <div>
@@ -395,7 +398,8 @@
 
   const COLOR_DOMIZIL  = "#2563eb";
   const COLOR_PRIVAT   = "#16a34a";
-  const COLOR_CONFLICT = "#dc2626";
+  const COLOR_CONFLICT    = "#dc2626";
+  const COLOR_BETRIEBLICH  = "#ea580c";
 
   // ─── HELPERS ────────────────────────────────────────────────────────────────
   function pad2(n) { return String(n).padStart(2, "0"); }
@@ -479,7 +483,9 @@
     return calculateConflicts(bookings)
       .sort((a, b) => (a.start || "").localeCompare(b.start || ""))
       .map(b => {
-        const base = b.type === "domizil" ? COLOR_DOMIZIL : COLOR_PRIVAT;
+        const base = b.type === "domizil" ? COLOR_DOMIZIL
+                   : b.type === "betrieblich" ? COLOR_BETRIEBLICH
+                   : COLOR_PRIVAT;
         return {
           id:              b.eventKey,
           title:           `${b.conflict ? "⚠ " : ""}${b.car} – ${(b.name || "").trim()}`,
@@ -579,12 +585,14 @@
   function openModalForBooking(b) {
     modalBooking = b;
     document.getElementById("mCar").textContent    = b.car || "";
-    document.getElementById("mType").textContent   = b.type === "domizil" ? "Domizil" : "Privat";
+    document.getElementById("mType").textContent   = b.type === "domizil" ? "Domizil"
+                                                     : b.type === "betrieblich" ? "Betrieblich"
+                                                     : "Privat";
     document.getElementById("mName").textContent   = (b.name || "").trim() || "-";
     document.getElementById("mTime").textContent   = `${fmtLocal(b.start)} → ${fmtLocal(b.end)}`;
     document.getElementById("mSource").textContent = b.sourceType === "series" ? "Serientermin" : "Einzeltermin";
 
-    const isDomSeries = b.type === "domizil" && b.sourceType === "series";
+    const isDomSeries = (b.type === "domizil" || b.type === "betrieblich") && b.sourceType === "series";
     document.getElementById("seriesActionBox").style.display     = isDomSeries ? "block" : "none";
     document.getElementById("modalDefaultButtons").style.display = isDomSeries ? "none"  : "flex";
     document.getElementById("modalOverlay").style.display        = "flex";
