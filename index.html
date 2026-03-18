@@ -1049,6 +1049,65 @@
   ensureCalendar();
   subscribeAll();
 
+  <!-- Easter Egg: Rechtsklick unten links -->
+<div id="easterEgg" style="
+  display:none;
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#0a0a1a;
+  color:#ffe81f;
+  font-family:'Courier New',monospace;
+  font-size:15px;
+  padding:20px 28px;
+  border-radius:12px;
+  border:1px solid #ffe81f44;
+  box-shadow:0 0 40px rgba(255,232,31,0.15), 0 8px 32px rgba(0,0,0,0.6);
+  z-index:99999;
+  text-align:center;
+  line-height:1.7;
+  max-width:360px;
+  opacity:0;
+  transition:opacity 0.4s ease, transform 0.4s ease;
+  pointer-events:none;
+">
+  <div style="font-size:26px;margin-bottom:8px;">🌌</div>
+  <div style="font-size:13px;letter-spacing:3px;opacity:0.6;margin-bottom:10px;">A L T O P L A N</div>
+  <div>"Well done, young Padawan.</div>
+  <div>Now, find you do other</div>
+  <div>easter eggs?"</div>
+  <div style="margin-top:12px;font-size:11px;opacity:0.4;letter-spacing:1px;">— Master Yoda, probably</div>
+</div>
+ 
+<script>
+  (function() {
+    const egg = document.getElementById("easterEgg");
+    let eggTimeout = null;
+ 
+    // Erkennung: Rechtsklick im Bereich unten links (120x120px Ecke)
+    document.addEventListener("contextmenu", function(e) {
+      if (e.clientX < 120 && e.clientY > window.innerHeight - 120) {
+        e.preventDefault();
+ 
+        // Anzeigen
+        egg.style.display = "block";
+        requestAnimationFrame(() => {
+          egg.style.opacity = "1";
+          egg.style.transform = "translateX(-50%) translateY(0)";
+        });
+ 
+        // Automatisch ausblenden nach 4 Sekunden
+        clearTimeout(eggTimeout);
+        eggTimeout = setTimeout(() => {
+          egg.style.opacity = "0";
+          egg.style.transform = "translateX(-50%) translateY(20px)";
+          setTimeout(() => { egg.style.display = "none"; }, 400);
+        }, 4000);
+      }
+    });
+  })();
 </script>
 </body>
 </html>
+
