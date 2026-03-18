@@ -238,6 +238,7 @@
       <span class="legend-dot dot-domizil"></span> Domizil
       <span class="legend-dot dot-privat" style="margin-left:6px;"></span> Privat
       <span class="legend-dot dot-betrieblich" style="margin-left:6px;"></span> Betrieblich
+      <span class="legend-dot dot-conflict" style="margin-left:6px;"></span> Konflikt
     </div>
   </div>
 
@@ -315,6 +316,7 @@
       <div class="small">
         Woche/Tag: Zeitfenster ziehen oder lange drücken + ziehen.<br>
         Monat: Tag antippen setzt 08:00–09:00.<br>
+        Domizil-Serien: nur dieser Termin / ab hier / ganze Serie bearbeitbar.
       </div>
     </div>
 
@@ -1049,7 +1051,9 @@
   ensureCalendar();
   subscribeAll();
 
-  <!-- Easter Egg: Rechtsklick unten links -->
+</script>
+
+<!-- Easter Egg: Rechtsklick unten links -->
 <div id="easterEgg" style="
   display:none;
   position:fixed;
@@ -1079,24 +1083,24 @@
   <div>easter eggs?"</div>
   <div style="margin-top:12px;font-size:11px;opacity:0.4;letter-spacing:1px;">— Master Yoda, probably</div>
 </div>
- 
+
 <script>
   (function() {
     const egg = document.getElementById("easterEgg");
     let eggTimeout = null;
- 
+
     // Erkennung: Rechtsklick im Bereich unten links (120x120px Ecke)
     document.addEventListener("contextmenu", function(e) {
       if (e.clientX < 120 && e.clientY > window.innerHeight - 120) {
         e.preventDefault();
- 
+
         // Anzeigen
         egg.style.display = "block";
         requestAnimationFrame(() => {
           egg.style.opacity = "1";
           egg.style.transform = "translateX(-50%) translateY(0)";
         });
- 
+
         // Automatisch ausblenden nach 4 Sekunden
         clearTimeout(eggTimeout);
         eggTimeout = setTimeout(() => {
@@ -1108,6 +1112,6 @@
     });
   })();
 </script>
+
 </body>
 </html>
-
