@@ -183,6 +183,34 @@
       .fc .fc-scroller                   { -webkit-overflow-scrolling: touch; }
     }
 
+    /* Feiertage BL optisch markieren, aber nicht blockieren */
+    .fc-day.holiday-bl,
+    .fc-daygrid-day.holiday-bl,
+    .fc-timegrid-col.holiday-bl,
+    .fc-timegrid-slot-lane.holiday-bl {
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(100,100,100,0.06),
+        rgba(100,100,100,0.06) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+    }
+
+    .holiday-label {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: 600;
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+
+    @media (max-width: 600px) {
+      .holiday-label {
+        font-size: 9px;
+      }
+    }
+
     .modalOverlay {
       position: fixed;
       inset: 0;
@@ -250,7 +278,6 @@
 
   <div class="layout">
 
-    <!-- LINKE SPALTE: Formular -->
     <div class="card">
       <h2 style="margin:0 0 10px 0;">Termin erfassen</h2>
 
@@ -258,10 +285,10 @@
         <div>
           <label for="type">Art</label>
           <select id="type" required>
-                <option value="privat">Privat</option>
-                <option value="domizil">Domizil</option>
-                <option value="betrieblich">Betrieblich</option>
-              </select>
+            <option value="privat">Privat</option>
+            <option value="domizil">Domizil</option>
+            <option value="betrieblich">Betrieblich</option>
+          </select>
         </div>
 
         <div>
@@ -315,10 +342,10 @@
       <div class="small">
         Woche/Tag: Zeitfenster ziehen oder lange drücken + ziehen.<br>
         Monat: Tag antippen setzt 08:00–09:00.<br>
+        Feiertage Basel-Landschaft sind schraffiert; Serientermine werden dort automatisch nicht angezeigt.
       </div>
     </div>
 
-    <!-- RECHTE SPALTE: Kalender -->
     <div class="card">
       <div id="calendar"></div>
     </div>
@@ -326,7 +353,6 @@
   </div>
 </div>
 
-<!-- MODAL -->
 <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
   <div class="modal">
     <h3 id="modalTitle">Termin</h3>
@@ -362,15 +388,11 @@
   </div>
 </div>
 
-<!-- SCRIPTS -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
 <script>
-  // ─── FIREBASE CONFIG ────────────────────────────────────────────────────────
-  // Firestore Rules müssen gesetzt sein auf:
-  //   allow read, write: if true;
   const firebaseConfig = {
     apiKey:            "AIzaSyDeyPHKe7p9mObPeaguSpdz8l8-ULkZnPE",
     authDomain:        "autoplan-6b642.firebaseapp.com",
@@ -383,23 +405,21 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // ─── STATE ──────────────────────────────────────────────────────────────────
   let activeCarFilter = "Auto 1";
   let allBookings     = [];
   let singleBookings  = [];
   let seriesDefs      = [];
   let overrides       = [];
   let calendar        = null;
-  let editingMode     = null; // null | "booking" | "series_whole" | "series_one" | "series_future"
+  let editingMode     = null;
   let editingId       = null;
   let modalBooking    = null;
 
-  const COLOR_DOMIZIL  = "#2563eb";
-  const COLOR_PRIVAT   = "#16a34a";
+  const COLOR_DOMIZIL     = "#2563eb";
+  const COLOR_PRIVAT      = "#16a34a";
   const COLOR_CONFLICT    = "#dc2626";
-  const COLOR_BETRIEBLICH  = "#ea580c";
+  const COLOR_BETRIEBLICH = "#ea580c";
 
-  // ─── HELPERS ────────────────────────────────────────────────────────────────
   function pad2(n) { return String(n).padStart(2, "0"); }
 
   function ymd(date) {
@@ -443,7 +463,6 @@
     document.getElementById("editHint").style.display  = "inline";
   }
 
-  // Formular zurücksetzen aber Typ/Auto/Name/Serie beibehalten
   function resetFormKeepContext() {
     const keep = {
       type:        document.getElementById("type").value,
@@ -461,7 +480,59 @@
     showSeriesBox();
   }
 
-  // ─── KONFLIKT-ERKENNUNG ─────────────────────────────────────────────────────
+  // Feiertage Basel-Landschaft automatisch berechnen
+  function easterDate(year) {
+    const a = year % 19;
+    const b = Math.floor(year / 100);
+    const c = year % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31);
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+
+  function addDays(date, days) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  function getHolidaysBL(year) {
+    const easter = easterDate(year);
+
+    return {
+      [`${year}-01-01`]: "Neujahr",
+      [ymd(addDays(easter, -2))]: "Karfreitag",
+      [ymd(addDays(easter, 1))]: "Ostermontag",
+      [`${year}-05-01`]: "Tag der Arbeit",
+      [ymd(addDays(easter, 39))]: "Auffahrt",
+      [ymd(addDays(easter, 50))]: "Pfingstmontag",
+      [`${year}-08-01`]: "Bundesfeier",
+      [`${year}-12-25`]: "Weihnachten",
+      [`${year}-12-26`]: "Stephanstag"
+    };
+  }
+
+  function isHolidayBL(dateStr) {
+    const year = Number(dateStr.slice(0, 4));
+    const holidays = getHolidaysBL(year);
+    return Object.prototype.hasOwnProperty.call(holidays, dateStr);
+  }
+
+  function holidayNameBL(dateStr) {
+    const year = Number(dateStr.slice(0, 4));
+    const holidays = getHolidaysBL(year);
+    return holidays[dateStr] || "";
+  }
+
   function calculateConflicts(bookings) {
     const arr = bookings.map(b => ({ ...b, conflict: false }));
     for (let i = 0; i < arr.length; i++) {
@@ -476,7 +547,6 @@
     return arr;
   }
 
-  // ─── KALENDER-EVENTS ────────────────────────────────────────────────────────
   function bookingsToEvents(bookings) {
     return calculateConflicts(bookings)
       .sort((a, b) => (a.start || "").localeCompare(b.start || ""))
@@ -496,7 +566,6 @@
       });
   }
 
-  // ─── SERIEN-GENERIERUNG ─────────────────────────────────────────────────────
   function getOverride(seriesId, dateStr) {
     return overrides.find(o => o.seriesId === seriesId && o.date === dateStr) || null;
   }
@@ -518,6 +587,14 @@
         const dateStr     = ymd(d);
 
         if (withinRange && jsDow === s.dow) {
+
+          // Feiertage Basel-Landschaft überspringen:
+          // Serientermine werden an diesen Tagen nicht automatisch erzeugt.
+          if (isHolidayBL(dateStr)) {
+            d.setDate(d.getDate() + 1);
+            continue;
+          }
+
           const ov = getOverride(s.id, dateStr);
 
           if (ov && ov.action === "delete") {
@@ -579,7 +656,6 @@
     calendar.addEventSource(bookingsToEvents(allBookings.filter(b => b.car === activeCarFilter)));
   }
 
-  // ─── MODAL ──────────────────────────────────────────────────────────────────
   function openModalForBooking(b) {
     modalBooking = b;
     document.getElementById("mCar").textContent    = b.car || "";
@@ -601,7 +677,6 @@
     modalBooking = null;
   }
 
-  // ─── KALENDER-INIT ──────────────────────────────────────────────────────────
   function ensureCalendar() {
     if (calendar) return;
     calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
@@ -656,12 +731,37 @@
       eventClick: (info) => {
         const b = allBookings.find(b => b.eventKey === info.event.id);
         if (b) openModalForBooking(b);
+      },
+
+      dayCellClassNames: (arg) => {
+        const dateStr = ymd(arg.date);
+        return isHolidayBL(dateStr) ? ["holiday-bl"] : [];
+      },
+
+      dayCellContent: (arg) => {
+        const dateStr = ymd(arg.date);
+        const name = holidayNameBL(dateStr);
+
+        if (!name) {
+          return { html: arg.dayNumberText };
+        }
+
+        return {
+          html: `
+            <div>${arg.dayNumberText}</div>
+            <div class="holiday-label">${name}</div>
+          `
+        };
+      },
+
+      slotLaneClassNames: (arg) => {
+        const dateStr = ymd(arg.date);
+        return isHolidayBL(dateStr) ? ["holiday-bl"] : [];
       }
     });
     calendar.render();
   }
 
-  // ─── AUTO-FILTER ────────────────────────────────────────────────────────────
   function setFilter(car) {
     activeCarFilter = car;
     document.querySelectorAll("button.car").forEach(b => {
@@ -675,15 +775,16 @@
     btn.addEventListener("click", () => setFilter(btn.dataset.car));
   });
 
-  // ─── SERIEN-HELPERS ─────────────────────────────────────────────────────────
   function buildSeriesOccurrencesForValidation(s) {
     const out   = [];
     let d       = new Date(s.startDate + "T00:00");
     const until = new Date(s.untilDate + "T23:59");
     while (d <= until) {
       const jsDow = d.getDay() === 0 ? 7 : d.getDay();
-      if (jsDow === s.dow) {
-        out.push({ start: `${ymd(d)}T${s.startTime}`, end: `${ymd(d)}T${s.endTime}`, car: s.car });
+      const dateStr = ymd(d);
+
+      if (jsDow === s.dow && !isHolidayBL(dateStr)) {
+        out.push({ start: `${dateStr}T${s.startTime}`, end: `${dateStr}T${s.endTime}`, car: s.car });
       }
       d.setDate(d.getDate() + 1);
     }
@@ -702,13 +803,12 @@
     }
   }
 
-  // ─── DOMIZIL-SERIE BEARBEITEN ───────────────────────────────────────────────
   async function handleDomSeriesEdit(mode) {
     if (!modalBooking) return;
     const s = seriesDefs.find(x => x.id === modalBooking.sourceId);
     if (!s) return;
 
-    document.getElementById("type").value  = "domizil";
+    document.getElementById("type").value  = modalBooking.type;
     document.getElementById("car").value   = modalBooking.car;
     document.getElementById("name").value  = modalBooking.name || "";
     document.getElementById("start").value = modalBooking.start;
@@ -728,7 +828,6 @@
     closeModal();
   }
 
-  // ─── DOMIZIL-SERIE LÖSCHEN ──────────────────────────────────────────────────
   async function handleDomSeriesDelete(mode) {
     if (!modalBooking) return;
     const s = seriesDefs.find(x => x.id === modalBooking.sourceId);
@@ -761,7 +860,7 @@
         await deleteOverridesForSeries(s.id);
       }
 
-      setMsg("✅ Domizil-Serie angepasst", "ok");
+      setMsg("✅ Serie angepasst", "ok");
     } catch (err) {
       console.error(err);
       setMsg("❌ Fehler beim Löschen", "err");
@@ -770,7 +869,6 @@
     }
   }
 
-  // ─── EVENT LISTENERS ────────────────────────────────────────────────────────
   document.getElementById("isSeries").addEventListener("change", showSeriesBox);
 
   document.getElementById("modalClose").addEventListener("click", closeModal);
@@ -862,7 +960,6 @@
     setMsg("", "");
   });
 
-  // ─── FORMULAR SPEICHERN ─────────────────────────────────────────────────────
   document.getElementById("bookingForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     setMsg("", "");
@@ -884,7 +981,6 @@
 
     try {
 
-      // ── Nur dieser Serien-Termin ──────────────────────────────────────────
       if (editingMode === "series_one") {
         if (!modalBooking?.occurrenceDate) return setMsg("❌ Serien-Termin nicht gefunden.", "err");
 
@@ -914,10 +1010,9 @@
           ovPayload.createdAt = new Date().toISOString();
           await db.collection("seriesOverrides").add(ovPayload);
         }
-        setMsg("✅ Nur dieser Domizil-Termin wurde angepasst.", "ok");
+        setMsg("✅ Nur dieser Termin wurde angepasst.", "ok");
       }
 
-      // ── Ab diesem Serien-Termin ───────────────────────────────────────────
       else if (editingMode === "series_future") {
         if (!modalBooking?.occurrenceDate) return setMsg("❌ Serien-Termin nicht gefunden.", "err");
 
@@ -958,10 +1053,9 @@
         if (conflicts) return setMsg("❌ Konflikt: Zukünftige Serie überschneidet bestehende Buchung.", "err");
 
         await db.collection("series").add(newSeries);
-        setMsg("✅ Domizil-Serie ab diesem Termin angepasst.", "ok");
+        setMsg("✅ Serie ab diesem Termin angepasst.", "ok");
       }
 
-      // ── Ganze Serie / neue Serie ──────────────────────────────────────────
       else if (editingMode === "series_whole" || isSeries) {
         const jsDow   = new Date(start).getDay() === 0 ? 7 : new Date(start).getDay();
         const payload = {
@@ -992,7 +1086,6 @@
         }
       }
 
-      // ── Einzeltermin ─────────────────────────────────────────────────────
       else {
         const conflicts = allBookings
           .filter(b => b.car === car)
@@ -1021,7 +1114,6 @@
     }
   });
 
-  // ─── FIRESTORE LISTENER ─────────────────────────────────────────────────────
   function subscribeAll() {
     db.collection("bookings").onSnapshot(snap => {
       singleBookings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1042,72 +1134,12 @@
     }, console.error);
   }
 
-  // ─── START ──────────────────────────────────────────────────────────────────
   document.getElementById("car").value  = activeCarFilter;
   document.getElementById("type").value = "privat";
   showSeriesBox();
   ensureCalendar();
   subscribeAll();
 
-</script>
-
-<!-- Easter Egg: Rechtsklick unten links -->
-<div id="easterEgg" style="
-  display:none;
-  position:fixed;
-  bottom:30px;
-  left:50%;
-  transform:translateX(-50%) translateY(20px);
-  background:#0a0a1a;
-  color:#ffe81f;
-  font-family:'Courier New',monospace;
-  font-size:15px;
-  padding:20px 28px;
-  border-radius:12px;
-  border:1px solid #ffe81f44;
-  box-shadow:0 0 40px rgba(255,232,31,0.15), 0 8px 32px rgba(0,0,0,0.6);
-  z-index:99999;
-  text-align:center;
-  line-height:1.7;
-  max-width:360px;
-  opacity:0;
-  transition:opacity 0.4s ease, transform 0.4s ease;
-  pointer-events:none;
-">
-  <div style="font-size:26px;margin-bottom:8px;">🌌</div>
-  <div style="font-size:13px;letter-spacing:3px;opacity:0.6;margin-bottom:10px;">A U T O P L A N</div>
-  <div>"Well done, young Padawan.</div>
-  <div>Now, find you do other</div>
-  <div>easter eggs?"</div>
-</div>
-
-<script>
-  (function() {
-    const egg = document.getElementById("easterEgg");
-    let eggTimeout = null;
-
-    // Erkennung: Rechtsklick im Bereich unten links (120x120px Ecke)
-    document.addEventListener("contextmenu", function(e) {
-      if (e.clientX < 120 && e.clientY > window.innerHeight - 120) {
-        e.preventDefault();
-
-        // Anzeigen
-        egg.style.display = "block";
-        requestAnimationFrame(() => {
-          egg.style.opacity = "1";
-          egg.style.transform = "translateX(-50%) translateY(0)";
-        });
-
-        // Automatisch ausblenden nach 4 Sekunden
-        clearTimeout(eggTimeout);
-        eggTimeout = setTimeout(() => {
-          egg.style.opacity = "0";
-          egg.style.transform = "translateX(-50%) translateY(20px)";
-          setTimeout(() => { egg.style.display = "none"; }, 400);
-        }, 4000);
-      }
-    });
-  })();
 </script>
 
 </body>
