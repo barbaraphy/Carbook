@@ -186,8 +186,7 @@
     /* Feiertage BL optisch markieren, aber nicht blockieren */
     .fc-day.holiday-bl,
     .fc-daygrid-day.holiday-bl,
-    .fc-timegrid-col.holiday-bl,
-    .fc-timegrid-slot-lane.holiday-bl {
+    .fc-timegrid-col.holiday-bl {
       background-image: repeating-linear-gradient(
         45deg,
         rgba(100,100,100,0.06),
@@ -480,7 +479,6 @@
     showSeriesBox();
   }
 
-  // Feiertage Basel-Landschaft automatisch berechnen
   function easterDate(year) {
     const a = year % 19;
     const b = Math.floor(year / 100);
@@ -588,8 +586,6 @@
 
         if (withinRange && jsDow === s.dow) {
 
-          // Feiertage Basel-Landschaft überspringen:
-          // Serientermine werden an diesen Tagen nicht automatisch erzeugt.
           if (isHolidayBL(dateStr)) {
             d.setDate(d.getDate() + 1);
             continue;
@@ -752,11 +748,6 @@
             <div class="holiday-label">${name}</div>
           `
         };
-      },
-
-      slotLaneClassNames: (arg) => {
-        const dateStr = ymd(arg.date);
-        return isHolidayBL(dateStr) ? ["holiday-bl"] : [];
       }
     });
     calendar.render();
